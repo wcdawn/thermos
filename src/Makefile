@@ -5,6 +5,7 @@ FFLAGS = -O3 -Wall -Wextra -std=f2018 -pedantic
 
 OBJ = \
 	  fileio.o \
+	  geometry.o \
 	  input.o \
 	  kind.o \
 	  main.o
@@ -32,6 +33,8 @@ clean:
 	$(RM) $(MOD)
 	$(RM) $(EXEC)
 
-main.o : kind.o input.o
+main.o : kind.o input.o geometry.o
 kind.o : 
 input.o : kind.o fileio.o
+fileio.o :
+geometry.o : kind.o

@@ -1,11 +1,14 @@
 module input
+use kind, only : rk, ik
 implicit none
 
 private
 
-character(16) :: geometry = 'cartesian'
+real(rk) :: length ! Total length of the calculation domain [cm]. Either outer radius or slab length.
+integer(ik) :: nx ! Number of spatial cells.
+character(16) :: geometry = 'cartesian' ! ('cartesian', 'cylindrical', 'spherical')
 
-public :: geometry
+public :: geometry, length, nx
 public :: input_parse, input_summary
 
 character(*), parameter :: comment_char = '#'
@@ -39,6 +42,8 @@ contains
       select case (card)
         case ('geometry')
           read(iunit, *) card, geometry
+        case ('length')
+          read(iunit, *) card, length
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))

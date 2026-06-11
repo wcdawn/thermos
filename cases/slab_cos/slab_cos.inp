@@ -1,1 +1,3 @@
 geometry cartesian
+length 10.
+nx 1024
