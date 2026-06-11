@@ -24,7 +24,9 @@ contains
 
     h = length / nx
     dx = h
-    ! TODO fill xcenter
+    do i = 1,nx
+      xcenter(i) = (i - 0.5_rk) * h
+    enddo ! i = 1,nx
 
   endsubroutine geometry_calculate_coordinates
 

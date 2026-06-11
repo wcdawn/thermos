@@ -44,6 +44,8 @@ contains
           read(iunit, *) card, geometry
         case ('length')
           read(iunit, *) card, length
+        case ('nx')
+          read(iunit, *) card, nx
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))
