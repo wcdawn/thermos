@@ -4,6 +4,7 @@ FC = gfortran
 FFLAGS = -O3 -Wall -Wextra -std=f2018 -pedantic
 
 OBJ = \
+	  fileio.o \
 	  input.o \
 	  kind.o \
 	  main.o
@@ -33,4 +34,4 @@ clean:
 
 main.o : kind.o input.o
 kind.o : 
-input.o : kind.o
+input.o : kind.o fileio.o

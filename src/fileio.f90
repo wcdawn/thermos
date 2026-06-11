@@ -7,7 +7,17 @@ public :: fileio_open_read, fileio_open_write
 
 contains
 
-  subroutine fileio_open_read(fname, iounit, replace)
+  subroutine fileio_open_read(fname, iounit)
+    character(*), intent(in) :: fname
+    integer, intent(in) :: iounit
+    integer :: ios
+    open(file = fname, unit = iounit, status = 'old', iostat = ios)
+    if (ios /= 0) then
+      call fileio_error(fname, iounit, ios)
+    endif
+  endsubroutine fileio_open_read
+
+  subroutine fileio_open_write(fname, iounit, replace)
     character(*), intent(in) :: fname
     integer, intent(in) :: iounit
     logical, intent(in), optional :: replace
@@ -25,19 +35,18 @@ contains
     if (ios /= 0) then
       call fileio_error(fname, iounit, ios)
     endif
-  endsubroutine fileio_open_read
-
-  subroutine fileio_open_write(fname, iounit)
-    character(*), intent(in) :: fname
-    integer, intent(in) :: iounit
-  endsubroutine fileio_open_read
+  endsubroutine fileio_open_write
 
   subroutine fileio_error(fname, iounit, iostat)
     character(*), intent(in) :: fname
     integer, intent(in) :: iounit
     integer, intent(in) :: iostat
     character(1024) :: line
-    write(*,*) 'ERROR: Failed to interact with file "' // trim(adjustl(fname)) // ' on unit
+    write(line, '(a,a,a,i0,a,i0)') &
+      'ERROR: failed to interact with file: ', trim(adjustl(fname)), &
+      ' on unit=', iounit, '. Recieved iostat=', iostat
+    write(*,line)
+    stop
   endsubroutine fileio_error
 
 endmodule fileio
