@@ -4,8 +4,9 @@ FC = gfortran
 FFLAGS = -O3 -Wall -Wextra -std=f2018 -pedantic
 
 OBJ = \
-	  main.o \
-	  kind.o
+	  input.o \
+	  kind.o \
+	  main.o
 
 MOD = $(OBJ:o=mod)
 
@@ -30,5 +31,6 @@ clean:
 	$(RM) $(MOD)
 	$(RM) $(EXEC)
 
-main.o : kind.o
+main.o : kind.o input.o
 kind.o : 
+input.o : kind.o
