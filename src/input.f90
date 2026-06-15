@@ -33,6 +33,11 @@ contains
       endif
 
       line = adjustl(line)
+
+      if (line == '') then
+        cycle
+      endif
+
       if (line(1:1) == comment_char) then
         cycle
       endif
