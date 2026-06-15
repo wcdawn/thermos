@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: geometry_calculate_coordinates, geometry_refine
+public :: geometry_calculate_coordinates, geometry_refine, geometry_summary
 
 contains
 
@@ -82,5 +82,14 @@ contains
       x0 = x0 + dx(i)
     enddo ! i = 1,nx
   endsubroutine geometry_dx2xcenter
+
+  subroutine geometry_summary(nx, dx)
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: dx(:) ! (nx)
+    write(*, '(a)') '=== GEOMETRY SUMMARY ==='
+    write(*, '(a, i0)') 'Number of cells: ', nx
+    write(*, '(a, es13.6)') 'Minimum DX: ', minval(dx)
+    write(*, '(a, es13.6)') 'Maximum DX: ', maxval(dx)
+  endsubroutine
 
 endmodule geometry

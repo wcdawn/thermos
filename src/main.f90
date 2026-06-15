@@ -2,7 +2,7 @@ program thermos
 use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
   length, nx, refine
-use geometry, only : geometry_calculate_coordinates, geometry_refine
+use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 implicit none
 
 character(1024) :: fname_input
@@ -27,9 +27,15 @@ allocate(xcenter(nx))
 allocate(dx(nx))
 call geometry_calculate_coordinates(length, nx, xcenter, dx)
 
+write(*, '(a)') '(before refinement)'
+call geometry_summary(nx, dx)
+
 do i = 1,refine
   call geometry_refine(nx, xcenter, dx)
 enddo ! i = 1,refine
+
+write(*, '(a)') '(after refinement)'
+call geometry_summary(nx, dx)
 
 deallocate(xcenter, dx)
 
