@@ -84,13 +84,18 @@ contains
   endsubroutine geometry_dx2xcenter
 
   subroutine geometry_summary(nx, dx)
+    use output, only : output_write
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: dx(:) ! (nx)
-    write(*, '(a)') '=== GEOMETRY SUMMARY ==='
-    write(*, '(a, i0)') 'Number of cells: ', nx
-    write(*, '(a, es13.6)') 'Minimum DX: ', minval(dx)
-    write(*, '(a, es13.6)') 'Maximum DX: ', maxval(dx)
-    write(*, *)
+    character(1024) :: line
+    call output_write('=== GEOMETRY SUMMARY ===')
+    write(line, '(a, i0)') 'Number of cells: ', nx
+    call output_write(line)
+    write(line, '(a, es13.6)') 'Minimum DX: ', minval(dx)
+    call output_write(line)
+    write(line, '(a, es13.6)') 'Maximum DX: ', maxval(dx)
+    call output_write(line)
+    call output_write('')
   endsubroutine
 
 endmodule geometry

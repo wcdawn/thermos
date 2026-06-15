@@ -65,12 +65,18 @@ contains
   endsubroutine input_parse
 
   subroutine input_summary()
-    write(*, '(a)') '=== INPUT SUMMARY ==='
-    write(*, '(a,a)') 'Geometry: ', trim(adjustl(geometry))
-    write(*, '(a,es13.6)') 'Length: ', length
-    write(*, '(a,i0)') 'NX: ', nx
-    write(*, '(a,i0)') 'Uniform Refinement: ', nx
-    write(*, *)
+    use output, only : output_write
+    character(1024) :: line
+    call output_write('=== INPUT SUMMARY ===')
+    write(line, '(a,a)') 'Geometry: ', trim(adjustl(geometry))
+    call output_write(line)
+    write(line, '(a,es13.6)') 'Length: ', length
+    call output_write(line)
+    write(line, '(a,i0)') 'NX: ', nx
+    call output_write(line)
+    write(line, '(a,i0)') 'Uniform Refinement: ', nx
+    call output_write(line)
+    call output_write('')
   endsubroutine input_summary
 
 endmodule input

@@ -8,7 +8,8 @@ OBJ = \
 	  geometry.o \
 	  input.o \
 	  kind.o \
-	  main.o
+	  main.o \
+	  output.o
 
 MOD = $(OBJ:o=mod)
 
@@ -33,8 +34,9 @@ clean:
 	$(RM) $(MOD)
 	$(RM) $(EXEC)
 
-main.o : kind.o input.o geometry.o
+main.o : kind.o input.o geometry.o output.o
 kind.o : 
-input.o : kind.o fileio.o
+input.o : kind.o fileio.o output.o
 fileio.o :
-geometry.o : kind.o
+geometry.o : kind.o output.o
+output.o : fileio.o
