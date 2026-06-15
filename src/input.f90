@@ -6,9 +6,10 @@ private
 
 real(rk) :: length ! Total length of the calculation domain [cm]. Either outer radius or slab length.
 integer(ik) :: nx ! Number of spatial cells.
+integer(ik) :: refine = 0 ! number of times to uniformly perform spatial refinement
 character(16) :: geometry = 'cartesian' ! ('cartesian', 'cylindrical', 'spherical')
 
-public :: geometry, length, nx
+public :: geometry, length, nx, refine
 public :: input_parse, input_summary
 
 character(*), parameter :: comment_char = '#'
@@ -46,6 +47,8 @@ contains
           read(iunit, *) card, length
         case ('nx')
           read(iunit, *) card, nx
+        case ('refine')
+          read(iunit, *) card, refine
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))
@@ -59,6 +62,9 @@ contains
   subroutine input_summary()
     write(*, '(a)') '=== INPUT SUMMARY ==='
     write(*, '(a,a)') 'Geometry: ', trim(adjustl(geometry))
+    write(*, '(a,es13.6)') 'Length: ', length
+    write(*, '(a,i0)') 'NX: ', nx
+    write(*, '(a,i0)') 'Uniform Refinement: ', nx
     write(*, *)
   endsubroutine input_summary
 

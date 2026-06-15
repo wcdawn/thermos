@@ -1,12 +1,13 @@
 program thermos
-use kind, only : rk
+use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
-  length, nx
-use geometry, only : geometry_calculate_coordinates
+  length, nx, refine
+use geometry, only : geometry_calculate_coordinates, geometry_refine
 implicit none
 
 character(1024) :: fname_input
 
+integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
 
 if (command_argument_count() == 0) then
@@ -25,6 +26,10 @@ call input_summary()
 allocate(xcenter(nx))
 allocate(dx(nx))
 call geometry_calculate_coordinates(length, nx, xcenter, dx)
+
+do i = 1,refine
+  call geometry_refine(nx, xcenter, dx)
+enddo ! i = 1,refine
 
 deallocate(xcenter, dx)
 
