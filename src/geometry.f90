@@ -90,6 +90,7 @@ contains
     write(*, '(a, i0)') 'Number of cells: ', nx
     write(*, '(a, es13.6)') 'Minimum DX: ', minval(dx)
     write(*, '(a, es13.6)') 'Maximum DX: ', maxval(dx)
+    write(*, *)
   endsubroutine
 
 endmodule geometry
