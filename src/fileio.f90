@@ -43,9 +43,9 @@ contains
     integer, intent(in) :: iostat
     character(1024) :: line
     write(line, '(a,a,a,i0,a,i0)') &
-      'ERROR: failed to interact with file: ', trim(adjustl(fname)), &
-      ' on unit=', iounit, '. Recieved iostat=', iostat
-    write(*,line)
+      "ERROR: failed to interact with file: '", trim(adjustl(fname)), &
+      "' on unit=", iounit, '. Recieved iostat=', iostat
+    write(*,*) trim(adjustl(line))
     stop
   endsubroutine fileio_error
 
