@@ -8,8 +8,16 @@ real(rk) :: length ! Total length of the calculation domain [cm]. Either outer r
 integer(ik) :: nx ! Number of spatial cells.
 integer(ik) :: refine = 0 ! number of times to uniformly perform spatial refinement
 character(16) :: geometry = 'cartesian' ! ('cartesian', 'cylindrical', 'spherical')
+character(64) :: solver = 'finite_difference' ! ('finite_difference', 'finite_element')
+integer(ik) :: max_iter = 10 ! Maximum number of Picard iterations
+real(rk) :: tol_temperature = 0.5_rk ! [K] Tolerance for Picard iterations (max.  abs. diff.)
+real(rk) :: init_temperature = 300.0_rk ! [K] Initial estimate for temperature (uniform)
 
+! variables
 public :: geometry, length, nx, refine
+public :: solver, max_iter, tol_temperature, init_temperature
+
+! subroutines
 public :: input_parse, input_summary
 
 character(*), parameter :: comment_char = '#'
@@ -75,6 +83,14 @@ contains
     write(line, '(a,i0)') 'NX: ', nx
     call output_write(line)
     write(line, '(a,i0)') 'Uniform Refinement: ', refine
+    call output_write(line)
+    write(line, '(a,a)') 'Solver: ', trim(adjustl(solver))
+    call output_write(line)
+    write(line, '(a,i0)') 'Maximum Picard iterations: ', max_iter
+    call output_write(line)
+    write(line, '(a,es9.2)') 'Temperature Tolerance [K]: ', tol_temperature
+    call output_write(line)
+    write(line, '(a,es9.2)') 'Initial Temperature [K]: ', init_temperature
     call output_write(line)
     call output_write('')
   endsubroutine input_summary

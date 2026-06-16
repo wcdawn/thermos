@@ -1,15 +1,18 @@
 program thermos
 use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
-  length, nx, refine
+  geometry, length, nx, refine, &
+  solver, max_iter, tol_temperature, init_temperature
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write
+use finite_difference, only : finite_difference_solve_cartesian
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out
 
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
+real(rk), allocatable :: temperature(:)
 
 if (command_argument_count() == 0) then
   stop 'missing input filename'
@@ -46,9 +49,20 @@ enddo ! i = 1,refine
 call output_write('(after refinement)')
 call geometry_summary(nx, dx)
 
+allocate(temperature(nx))
+
+select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
+  case ('finite_difference_cartesian')
+    call finite_difference_solve_cartesian(nx, dx, &
+      max_iter, tol_temperature, init_temperature, temperature)
+  case default
+    call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))
+endselect
+
 call output_write('End Thermos')
 
 call output_close_file()
 deallocate(xcenter, dx)
+deallocate(temperature)
 
 endprogram thermos

@@ -5,9 +5,11 @@ FFLAGS = -O3 -Wall -Wextra -std=f2018 -pedantic
 
 OBJ = \
 	  fileio.o \
+	  finite_difference.o \
 	  geometry.o \
 	  input.o \
 	  kind.o \
+	  linalg.o \
 	  main.o \
 	  output.o
 
@@ -36,7 +38,9 @@ clean:
 
 main.o : kind.o input.o geometry.o output.o
 kind.o : 
-input.o : kind.o fileio.o output.o
+input.o : kind.o fileio.o output.o finite_difference.o
 fileio.o :
 geometry.o : kind.o output.o
 output.o : fileio.o
+finite_difference.o : kind.o linalg.o output.o
+linalg.o : kind.o
