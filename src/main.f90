@@ -4,11 +4,12 @@ use input, only : input_parse, input_summary, &
   geometry, length, nx, refine, &
   solver, max_iter, tol_temperature, init_temperature
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
-use output, only : output_open_file, output_close_file, output_write
+use output, only : output_open_file, output_close_file, output_write, &
+  output_temperature_csv
 use finite_difference, only : finite_difference_solve_cartesian
 implicit none
 
-character(1024) :: fname_input, fname_stub, fname_out
+character(1024) :: fname_input, fname_stub, fname_out, fname_temperature
 
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
@@ -25,6 +26,7 @@ call get_command_argument(1, fname_input)
 i = index(trim(adjustl(fname_input)), '.', back=.true.) - 1
 fname_stub = fname_input(:i)
 fname_out = trim(adjustl(fname_stub)) // '.out'
+fname_temperature = trim(adjustl(fname_stub)) // '_temperature.csv'
 
 call output_open_file(fname_out)
 
@@ -53,11 +55,16 @@ allocate(temperature(nx))
 
 select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
   case ('finite_difference_cartesian')
-    call finite_difference_solve_cartesian(nx, dx, &
+    call finite_difference_solve_cartesian(nx, xcenter, dx, &
       max_iter, tol_temperature, init_temperature, temperature)
   case default
     call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))
 endselect
+
+call output_write('Writing temperautre output on: ' // &
+  trim(adjustl(fname_temperature)))
+call output_temperature_csv(fname_temperature, nx, xcenter, temperature)
+call output_write('')
 
 call output_write('End Thermos')
 

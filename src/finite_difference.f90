@@ -8,25 +8,57 @@ public :: finite_difference_solve_cartesian
 
 contains
 
-  subroutine finite_difference_build_matrix_cartesian(nx, dx, sub, dia, sup)
+  subroutine finite_difference_build_matrix_cartesian(nx, dx, temperature, &
+      sub, dia, sup)
+    use conductivity_function, only : conductivity_fun
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: dx(:) ! (nx)
+    real(rk), intent(in) :: temperature(:) ! (nx)
     real(rk), intent(out) :: sub(:) ! (nx-1)
     real(rk), intent(out) :: dia(:) ! (nx)
     real(rk), intent(out) :: sup(:) ! (nx-1)
+
+    integer(ik) :: i
+    real(rk) :: kprev, kthis, knext
+
+    do i = 2,nx-1
+
+      kprev = conductivity_fun(temperature(i-1))
+      kthis = conductivity_fun(temperature(i))
+      knext = conductivity_fun(temperature(i+1))
+
+      sub(i-1) = 2.0_rk * (kthis/dx(i)) * (kprev/dx(i-1)) &
+        / (kprev/dx(i-1) + kthis/dx(i))
+      dia(i) = 2.0_rk* ((kthis/dx(i) * (kprev/dx(i-1)) &
+        / (kprev/dx(i-1) + kthis/dx(i))) + (kthis/dx(i) * knext/dx(i+1) & 
+        / (knext/dx(i+1) + kthis/dx(i))))
+      sup(i) = 2.0_rk * (kthis/dx(i)) * (knext/dx(i+1)) &
+        / (knext/dx(i+1) + kthis/dx(i))
+
+    enddo ! i = 2,nx-1
+
   endsubroutine finite_difference_build_matrix_cartesian
 
-  subroutine finite_difference_build_source_cartesian(nx, dx, src)
+  subroutine finite_difference_build_source_cartesian(nx, xcenter, dx, src)
+    use source_function, only : source_fun
     integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(out) :: src(:) ! (nx)
+    
+    integer(ik) :: i
+
+    do i = 1,nx
+      src(i) = dx(i) * source_fun(xcenter(i))
+    enddo ! i = 1,nx
   endsubroutine finite_difference_build_source_cartesian
 
-  subroutine finite_difference_solve_cartesian(nx, dx, &
+  subroutine finite_difference_solve_cartesian(nx, xcenter, dx, &
       max_iter, tol_temperature, init_temperature, temperature)
     use linalg, only : trid, norm
     use output, only : output_write
     integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
     integer(ik), intent(in) :: max_iter
     real(rk), intent(in) :: tol_temperature ! [K]
@@ -51,7 +83,7 @@ contains
     allocate(q(nx), qcpy(nx))
     allocate(temperature_old(nx))
 
-    call finite_difference_build_source_cartesian(nx, dx, qcpy)
+    call finite_difference_build_source_cartesian(nx, xcenter, dx, qcpy)
 
     temperature = init_temperature
 
@@ -62,7 +94,8 @@ contains
 
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
-      call finite_difference_build_matrix_cartesian(nx, dx, sub, dia, sup)
+      call finite_difference_build_matrix_cartesian(nx, dx, temperature, &
+        sub, dia, sup)
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)
