@@ -69,7 +69,8 @@ contains
 
       conv = norm(-1, temperature - temperature_old) ! max. abs. diff.
 
-      write(line, '(a,i0,1x,a,es9.2)') 'iter=', iter, 'conv=', conv
+      write(line, '(a,i3,1x,a,es9.2)') 'iter=', iter, 'conv=', conv
+      call output_write(line)
 
       if (conv < tol_temperature) then
         call output_write('CONVERGENCE!!!')
@@ -77,6 +78,8 @@ contains
       endif
 
     enddo ! iter = 1,max_iter
+
+    call output_write('')
 
     deallocate(temperature_old)
     deallocate(q, qcpy)
