@@ -8,19 +8,19 @@ public :: finite_difference_solve_cartesian
 
 contains
 
-  subroutine finite_difference_build_matrix(nx, dx, sub, dia, sup)
+  subroutine finite_difference_build_matrix_cartesian(nx, dx, sub, dia, sup)
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(out) :: sub(:) ! (nx-1)
     real(rk), intent(out) :: dia(:) ! (nx)
     real(rk), intent(out) :: sup(:) ! (nx-1)
-  endsubroutine finite_difference_build_matrix
+  endsubroutine finite_difference_build_matrix_cartesian
 
-  subroutine finite_difference_build_source(nx, dx, src)
+  subroutine finite_difference_build_source_cartesian(nx, dx, src)
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(out) :: src(:) ! (nx)
-  endsubroutine finite_difference_build_source
+  endsubroutine finite_difference_build_source_cartesian
 
   subroutine finite_difference_solve_cartesian(nx, dx, &
       max_iter, tol_temperature, init_temperature, temperature)
@@ -51,7 +51,7 @@ contains
     allocate(q(nx), qcpy(nx))
     allocate(temperature_old(nx))
 
-    call finite_difference_build_source(nx, dx, qcpy)
+    call finite_difference_build_source_cartesian(nx, dx, qcpy)
 
     temperature = init_temperature
 
@@ -62,7 +62,7 @@ contains
 
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
-      call finite_difference_build_matrix(nx, dx, sub, dia, sup)
+      call finite_difference_build_matrix_cartesian(nx, dx, sub, dia, sup)
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)
