@@ -74,7 +74,7 @@ contains
     call output_write(line)
     write(line, '(a,i0)') 'NX: ', nx
     call output_write(line)
-    write(line, '(a,i0)') 'Uniform Refinement: ', nx
+    write(line, '(a,i0)') 'Uniform Refinement: ', refinement
     call output_write(line)
     call output_write('')
   endsubroutine input_summary
