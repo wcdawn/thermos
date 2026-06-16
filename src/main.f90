@@ -59,6 +59,7 @@ select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
       max_iter, tol_temperature, init_temperature, temperature)
   case default
     call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))
+    stop
 endselect
 
 call output_write('Writing temperautre output on: ' // &

@@ -9,17 +9,35 @@ public :: finite_difference_solve_cartesian
 contains
 
   subroutine finite_difference_build_matrix_cartesian(nx, dx, temperature, &
-      sub, dia, sup)
+      bctype_left, bctype_right, sub, dia, sup)
     use conductivity_function, only : conductivity_fun
+    use output, only : output_write
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(in) :: temperature(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
     real(rk), intent(out) :: sub(:) ! (nx-1)
     real(rk), intent(out) :: dia(:) ! (nx)
     real(rk), intent(out) :: sup(:) ! (nx-1)
 
     integer(ik) :: i
     real(rk) :: kprev, kthis, knext
+
+    ! BC at x=0, i=1
+    select case (bctype_left)
+      case ('fixed')
+        kthis = conductivity_fun(temperature(1))
+        knext = conductivity_fun(temperature(2))
+        dia(1) = -2.0_rk * ((kthis/dx(1)) * (knext/dx(2)) &
+          / (kthis/dx(1) + knext/dx(2)) &
+          + kthis/dx(1))
+        sup(1) = 2.0_rk * (kthis/dx(1)) * (knext/dx(2)) &
+          / (kthis/dx(1) + knext/dx(2))
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_matrix: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
 
     do i = 2,nx-1
 
@@ -28,29 +46,71 @@ contains
       knext = conductivity_fun(temperature(i+1))
 
       sub(i-1) = 2.0_rk * (kthis/dx(i)) * (kprev/dx(i-1)) &
-        / (kprev/dx(i-1) + kthis/dx(i))
-      dia(i) = 2.0_rk* ((kthis/dx(i) * (kprev/dx(i-1)) &
-        / (kprev/dx(i-1) + kthis/dx(i))) + (kthis/dx(i) * knext/dx(i+1) & 
-        / (knext/dx(i+1) + kthis/dx(i))))
+        / (kthis/dx(i) + kprev/dx(i-1))
+      dia(i) = -2.0_rk* (kthis/dx(i) * (kprev/dx(i-1)) &
+        / (kthis/dx(i) + kprev/dx(i-1)) &
+        + kthis/dx(i) * knext/dx(i+1) & 
+        / (kthis/dx(i) + knext/dx(i+1)))
       sup(i) = 2.0_rk * (kthis/dx(i)) * (knext/dx(i+1)) &
-        / (knext/dx(i+1) + kthis/dx(i))
+        / (kthis/dx(i) + knext/dx(i+1))
 
     enddo ! i = 2,nx-1
 
+    select case (bctype_right)
+      case ('fixed')
+        kprev = conductivity_fun(temperature(nx-1))
+        kthis = conductivity_fun(temperature(nx))
+        sub(nx-1) = 2.0_rk * (kthis/dx(nx)) * (kprev/dx(nx-1)) &
+          / (kthis/dx(nx) + kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * ((kthis/dx(nx)) * (kprev/dx(nx-1)) &
+          / (kthis/dx(nx) + kprev/dx(nx-1)) &
+          +  kthis/dx(1))
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_matrix: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+
   endsubroutine finite_difference_build_matrix_cartesian
 
-  subroutine finite_difference_build_source_cartesian(nx, xcenter, dx, src)
+  subroutine finite_difference_build_source_cartesian(nx, xcenter, dx, &
+      bctype_left, bctype_right, Tleft, Tright, src)
     use source_function, only : source_fun
+    use conductivity_function, only : conductivity_fun
+    use output, only : output_write
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(in) :: Tleft, Tright
     real(rk), intent(out) :: src(:) ! (nx)
     
     integer(ik) :: i
 
-    do i = 1,nx
+    select case(bctype_left)
+      case ('fixed')
+        src(1) = dx(1) * source_fun(xcenter(1)) &
+          + 2.0_rk * conductivity_fun(Tleft) / dx(1) * Tleft
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_source: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
+
+    do i = 2,nx-1
       src(i) = dx(i) * source_fun(xcenter(i))
-    enddo ! i = 1,nx
+    enddo ! i = 2,nx-1
+
+    select case(bctype_right)
+      case ('fixed')
+        src(nx) = dx(nx) * source_fun(xcenter(nx)) &
+          + 2.0_rk * conductivity_fun(Tright) / dx(nx) * Tright
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_source: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+
   endsubroutine finite_difference_build_source_cartesian
 
   subroutine finite_difference_solve_cartesian(nx, xcenter, dx, &
@@ -83,7 +143,8 @@ contains
     allocate(q(nx), qcpy(nx))
     allocate(temperature_old(nx))
 
-    call finite_difference_build_source_cartesian(nx, xcenter, dx, qcpy)
+    call finite_difference_build_source_cartesian(nx, xcenter, dx, &
+      'fixed', 'fixed', 600.0_rk, 300.0_rk, qcpy)
 
     temperature = init_temperature
 
@@ -95,7 +156,7 @@ contains
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
       call finite_difference_build_matrix_cartesian(nx, dx, temperature, &
-        sub, dia, sup)
+        'fixed', 'fixed', sub, dia, sup)
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)
