@@ -45,7 +45,7 @@ contains
     real(rk) :: L
     q0 = coeff(1)
     L  = coeff(2)
-    source_fun_cos = q0 * cos(pi * x / L)
+    source_fun_cos = q0 * cos(pi * x * 0.5_rk / L)
   endfunction source_fun_cos
 
   subroutine source_function_cleanup()

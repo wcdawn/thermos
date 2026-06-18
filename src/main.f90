@@ -74,7 +74,7 @@ select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
 endselect
 
 if (analysis_name /= 'none') then
-  call analysis_analyze(analysis_name, nx, temperature)
+  call analysis_analyze(analysis_name, nx, xcenter, temperature)
 endif
 
 call output_write('Writing temperautre output on: ' // &
