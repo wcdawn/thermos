@@ -110,6 +110,7 @@ contains
           // trim(adjustl(bctype_right)))
         stop
     endselect
+    src = -src
 
   endsubroutine finite_difference_build_source_cartesian
 
