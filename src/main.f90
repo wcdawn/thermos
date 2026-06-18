@@ -3,13 +3,15 @@ use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
   geometry, length, nx, refine, &
   bctype_left, bctype_right, bcval_left, bcval_right, &
-  solver, max_iter, tol_temperature, init_temperature
+  solver, max_iter, tol_temperature, init_temperature, &
+  conductivity_function_name, conductivity_coeff, &
+  source_function_name, source_coeff
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write, &
   output_temperature_csv
 use finite_difference, only : finite_difference_solve_cartesian
-use source_function, only : source_function_init
-use conductivity_function, only : conductivity_function_init
+use source_function, only : source_function_init, source_function_cleanup
+use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, fname_temperature
@@ -54,8 +56,8 @@ enddo ! i = 1,refine
 call output_write('(after refinement)')
 call geometry_summary(nx, dx)
 
-call source_function_init('cos')
-call conductivity_function_init('constant')
+call source_function_init(source_function_name, source_coeff)
+call conductivity_function_init(conductivity_function_name, conductivity_coeff)
 
 allocate(temperature(nx))
 
@@ -76,6 +78,8 @@ call output_write('')
 
 call output_write('End Thermos')
 
+call source_function_cleanup()
+call conductivity_function_cleanup()
 call output_close_file()
 deallocate(xcenter, dx)
 deallocate(temperature)

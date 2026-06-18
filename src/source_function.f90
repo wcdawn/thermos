@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: source_function_init
+public :: source_function_init, source_function_cleanup
 
 abstract interface
   pure function q(x)
@@ -16,11 +16,18 @@ endinterface
 
 procedure(q), pointer, public :: source_fun => null()
 
+real(rk), allocatable :: coeff(:)
+
 contains
 
-  subroutine source_function_init(source_name)
+  subroutine source_function_init(source_name, coeff_in)
     use output, only : output_write
     character(*), intent(in) :: source_name
+    real(rk), intent(in) :: coeff_in(:)
+
+    allocate(coeff(size(coeff_in)))
+    coeff = coeff_in
+
     select case (source_name)
       case ('cos')
         source_fun => source_fun_cos
@@ -34,9 +41,15 @@ contains
   pure real(rk) function source_fun_cos(x)
     use constants, only : pi
     real(rk), intent(in) :: x ! [cm] position
-    real(rk), parameter :: q0 = 20.0_rk
-    real(rk), parameter :: L = 10.0_rk
+    real(rk) :: q0
+    real(rk) :: L
+    q0 = coeff(1)
+    L  = coeff(2)
     source_fun_cos = q0 * cos(pi * x / L)
   endfunction source_fun_cos
+
+  subroutine source_function_cleanup()
+    deallocate(coeff)
+  endsubroutine source_function_cleanup
 
 endmodule source_function

@@ -6,3 +6,7 @@ bctype_left fixed
 bctype_right fixed
 bcval_left 600.
 bcval_right 300.
+
+conductivity_function constant
+conductivity_coeff 1.2 /
+source_function cos

@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: conductivity_function_init
+public :: conductivity_function_init, conductivity_function_cleanup
 
 abstract interface
   pure function k(T)
@@ -16,11 +16,18 @@ endinterface
 
 procedure(k), pointer, public :: conductivity_fun => null()
 
+real(rk), allocatable :: coeff(:)
+
 contains
 
-  subroutine conductivity_function_init(conductivity_name)
+  subroutine conductivity_function_init(conductivity_name, coeff_in)
     use output, only : output_write
     character(*), intent(in) :: conductivity_name
+    real(rk), intent(in) :: coeff_in(:)
+
+    allocate(coeff(size(coeff_in)))
+    coeff = coeff_in
+
     select case (conductivity_name)
       case ('constant')
         conductivity_fun => conductivity_fun_const
@@ -33,8 +40,13 @@ contains
 
   pure real(rk) function conductivity_fun_const(T)
     real(rk), intent(in) :: T ! [K] temperature
-    real(rk), parameter :: k0 = 1.2_rk
+    real(rk) :: k0
+    k0 = coeff(1)
     conductivity_fun_const = k0
   endfunction conductivity_fun_const
+
+  subroutine conductivity_function_cleanup()
+    deallocate(coeff)
+  endsubroutine conductivity_function_cleanup
 
 endmodule conductivity_function

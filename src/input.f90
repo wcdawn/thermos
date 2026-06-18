@@ -18,10 +18,17 @@ character(16) :: bctype_right= 'fixed'
 real(rk) :: bcval_left = 600.0_rk
 real(rk) :: bcval_right = 300.0_rk
 
+character(16) :: source_function_name = 'cos'
+real(rk) :: source_coeff(4) = [ 20.0, 10.0, 0.0, 0.0 ]
+character(16) :: conductivity_function_name = 'constant'
+real(rk) :: conductivity_coeff(4) = [ 1.2, 0.0, 0.0, 0.0 ]
+
 ! variables
 public :: geometry, length, nx, refine
 public :: solver, max_iter, tol_temperature, init_temperature
 public :: bctype_left, bctype_right, bcval_left, bcval_right
+public :: conductivity_function_name, conductivity_coeff
+public :: source_function_name, source_coeff
 
 ! subroutines
 public :: input_parse, input_summary
@@ -76,6 +83,14 @@ contains
           read(iunit, *) card, bcval_left
         case ('bcval_right')
           read(iunit, *) card, bcval_right
+        case ('source_function')
+          read(iunit, *) card, source_function_name
+        case ('source_coeff')
+          read(iunit, *) card, source_coeff ! NOTE: fortran array input
+        case ('conductivity_function')
+          read(iunit, *) card, conductivity_function_name
+        case ('conductivity_coeff')
+          read(iunit, *) card, conductivity_coeff ! NOTE: fortran array input
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))
@@ -89,6 +104,7 @@ contains
   subroutine input_summary()
     use output, only : output_write
     character(1024) :: line
+    integer :: i
     call output_write('=== INPUT SUMMARY ===')
     write(line, '(a,a)') 'Geometry: ', trim(adjustl(geometry))
     call output_write(line)
@@ -112,6 +128,27 @@ contains
     write(line, '(a,a,es9.2,a,es9.2)') 'Boundary values.', &
       ' Left: ', bcval_left, ' Right: ',bcval_right
     call output_write(line)
+
+    write(line, '(a,a)') 'Source function q(x): ', &
+      trim(adjustl(source_function_name))
+    call output_write(line)
+    write(line, '(a,es9.2)') 'Source coefficients: [ ', source_coeff(1)
+    do i = 2,size(source_coeff)
+      write(line, '(a,es9.2)') trim(adjustl(line)) // ' , ', source_coeff(i)
+    enddo ! i = 2,size(source_coeff)
+    line = trim(adjustl(line)) // ' ]'
+    call output_write(line)
+
+    write(line, '(a,a)') 'Conductivity function k(T): ', &
+      trim(adjustl(conductivity_function_name))
+    call output_write(line)
+    write(line, '(a,es9.2)') 'Conductivity coefficients: [ ', conductivity_coeff(1)
+    do i = 2,size(conductivity_coeff)
+      write(line, '(a,es9.2)') trim(adjustl(line)) // ' , ', conductivity_coeff(i)
+    enddo ! i = 2,size(conductivity_coeff)
+    line = trim(adjustl(line)) // ' ]'
+    call output_write(line)
+
     call output_write('')
   endsubroutine input_summary
 
