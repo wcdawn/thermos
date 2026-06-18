@@ -13,8 +13,10 @@ integer(ik) :: max_iter = 10 ! Maximum number of Picard iterations
 real(rk) :: tol_temperature = 0.5_rk ! [K] Tolerance for Picard iterations (max.  abs. diff.)
 real(rk) :: init_temperature = 300.0_rk ! [K] Initial estimate for temperature (uniform)
 
-character(16) :: bctype_left = 'fixed'
-character(16) :: bctype_right= 'fixed'
+! NOTE: For cylindrical and spherical geometry, bctype_left will always be
+! treated as 'insulated' regardless of user input.
+character(16) :: bctype_left = 'fixed' ! ('fixed', 'insulated')
+character(16) :: bctype_right= 'fixed' ! ('fixed', 'insulated')
 real(rk) :: bcval_left = 600.0_rk
 real(rk) :: bcval_right = 300.0_rk
 
