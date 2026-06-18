@@ -124,13 +124,16 @@ contains
     real(rk), intent(out) :: src(:) ! (nx)
     
     integer(ik) :: i
+    real(rk) :: xthis
 
     select case(bctype_left)
       case ('fixed')
-        src(1) = dx(1) * source_fun(xcenter(1)) &
-          + 2.0_rk * conductivity_fun(Tleft) / dx(1) * Tleft
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1)) &
+          + 2.0_rk * xthis * conductivity_fun(Tleft) / dx(1) * Tleft
       case ('insulated')
-        src(1) = dx(1) * source_fun(xcenter(1))
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1))
       case default
         call output_write('ERROR: unknown value of bctype_left in build_source: ' &
           // trim(adjustl(bctype_left)))
@@ -138,15 +141,18 @@ contains
     endselect
 
     do i = 2,nx-1
-      src(i) = dx(i) * source_fun(xcenter(i))
+      xthis = geometry_factor(xcenter(i))
+      src(i) = dx(i) * xthis * source_fun(xcenter(i))
     enddo ! i = 2,nx-1
 
     select case(bctype_right)
       case ('fixed')
-        src(nx) = dx(nx) * source_fun(xcenter(nx)) &
-          + 2.0_rk * conductivity_fun(Tright) / dx(nx) * Tright
+        xthis = geometry_factor(xcenter(i))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx)) &
+          + 2.0_rk * xthis * conductivity_fun(Tright) / dx(nx) * Tright
       case ('insulated')
-        src(nx) = dx(nx) * source_fun(xcenter(nx))
+        xthis = geometry_factor(xcenter(i))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
       case default
         call output_write('ERROR: unknown value of bctype_right in build_source: ' &
           // trim(adjustl(bctype_right)))
