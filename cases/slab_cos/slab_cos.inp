@@ -10,3 +10,5 @@ bcval_right 300.
 conductivity_function constant
 conductivity_coeff 1.2 /
 source_function cos
+
+analysis_name slab_cos

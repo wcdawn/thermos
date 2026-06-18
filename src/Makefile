@@ -4,6 +4,7 @@ FC = gfortran
 FFLAGS = -O3 -Wall -Wextra -std=f2018 -pedantic
 
 OBJ = \
+	  analysis.o \
 	  conductivity_function.o \
 	  constants.o \
 	  fileio.o \
@@ -39,7 +40,7 @@ clean:
 	$(RM) $(MOD)
 	$(RM) $(EXEC)
 
-main.o : kind.o input.o geometry.o output.o finite_difference.o source_function.o conductivity_function.o
+main.o : kind.o input.o geometry.o output.o finite_difference.o source_function.o conductivity_function.o analysis.o
 kind.o : 
 input.o : kind.o fileio.o output.o finite_difference.o
 fileio.o :
@@ -50,3 +51,4 @@ linalg.o : kind.o
 constants.o : kind.o
 source_function.o : kind.o constants.o output.o
 conductivity_function.o : kind.o output.o
+analysis.o : kind.o output.o

@@ -5,13 +5,15 @@ use input, only : input_parse, input_summary, &
   bctype_left, bctype_right, bcval_left, bcval_right, &
   solver, max_iter, tol_temperature, init_temperature, &
   conductivity_function_name, conductivity_coeff, &
-  source_function_name, source_coeff
+  source_function_name, source_coeff, &
+  analysis_name
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write, &
   output_temperature_csv
 use finite_difference, only : finite_difference_solve_cartesian
 use source_function, only : source_function_init, source_function_cleanup
 use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup
+use analysis, only : analysis_analyze
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, fname_temperature
@@ -70,6 +72,10 @@ select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
     call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))
     stop
 endselect
+
+if (analysis_name /= 'none') then
+  call analysis_analyze(analysis_name, nx, temperature)
+endif
 
 call output_write('Writing temperautre output on: ' // &
   trim(adjustl(fname_temperature)))

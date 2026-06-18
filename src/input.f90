@@ -23,12 +23,15 @@ real(rk) :: source_coeff(4) = [ 20.0, 10.0, 0.0, 0.0 ]
 character(16) :: conductivity_function_name = 'constant'
 real(rk) :: conductivity_coeff(4) = [ 1.2, 0.0, 0.0, 0.0 ]
 
+character(16) :: analysis_name = 'none'
+
 ! variables
 public :: geometry, length, nx, refine
 public :: solver, max_iter, tol_temperature, init_temperature
 public :: bctype_left, bctype_right, bcval_left, bcval_right
 public :: conductivity_function_name, conductivity_coeff
 public :: source_function_name, source_coeff
+public :: analysis_name
 
 ! subroutines
 public :: input_parse, input_summary
@@ -91,6 +94,8 @@ contains
           read(iunit, *) card, conductivity_function_name
         case ('conductivity_coeff')
           read(iunit, *) card, conductivity_coeff ! NOTE: fortran array input
+        case ('analysis_name')
+          read(iunit, *) card, analysis_name
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))
@@ -147,6 +152,9 @@ contains
       write(line, '(a,es9.2)') trim(adjustl(line)) // ' , ', conductivity_coeff(i)
     enddo ! i = 2,size(conductivity_coeff)
     line = trim(adjustl(line)) // ' ]'
+    call output_write(line)
+
+    write(line, '(a,a)') 'Analytic comparison name: ', trim(adjustl(analysis_name))
     call output_write(line)
 
     call output_write('')
