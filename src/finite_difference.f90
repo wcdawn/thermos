@@ -6,13 +6,24 @@ private
 
 public :: finite_difference_solve
 
+abstract interface
+  pure function geo(x)
+    use kind, only : rk
+    real(rk) :: geo
+    real(rk), intent(in) :: x
+  endfunction geo
+endinterface
+
+procedure(geo), pointer :: geometry_factor => null()
+
 contains
 
-  subroutine finite_difference_build_matrix(nx, dx, temperature, &
+  subroutine finite_difference_build_matrix(nx, xcenter, dx, temperature, &
       bctype_left, bctype_right, sub, dia, sup)
     use conductivity_function, only : conductivity_fun
     use output, only : output_write
     integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(in) :: temperature(:) ! (nx)
     character(*), intent(in) :: bctype_left, bctype_right
@@ -22,24 +33,29 @@ contains
 
     integer(ik) :: i
     real(rk) :: kprev, kthis, knext
+    real(rk) :: xprev, xthis, xnext
 
     ! BC at x=0, i=1
     select case (bctype_left)
-      case ('fixed')
+      case ('fixed') ! TODO consider cylindrical and spherical geometry
         kthis = conductivity_fun(temperature(1))
         knext = conductivity_fun(temperature(2))
-        dia(1) = -2.0_rk * ((kthis/dx(1)) * (knext/dx(2)) &
-          / (kthis/dx(1) + knext/dx(2)) &
-          + kthis/dx(1))
-        sup(1) = 2.0_rk * (kthis/dx(1)) * (knext/dx(2)) &
-          / (kthis/dx(1) + knext/dx(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * ((xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2)) &
+          + xthis*kthis/dx(1))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
       case ('insulated')
         kthis = conductivity_fun(temperature(1))
         knext = conductivity_fun(temperature(2))
-        dia(1) = -2.0_rk * (kthis/dx(1)) * (knext/dx(2)) &
-          / (kthis/dx(1) + knext/dx(2))
-        sup(1) = 2.0_rk * (kthis/dx(1)) * (knext/dx(2)) &
-          / (kthis/dx(1) + knext/dx(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
       case default
         call output_write('ERROR: unknown value of bctype_left in build_matrix: ' &
           // trim(adjustl(bctype_left)))
@@ -52,14 +68,18 @@ contains
       kthis = conductivity_fun(temperature(i))
       knext = conductivity_fun(temperature(i+1))
 
-      sub(i-1) = 2.0_rk * (kthis/dx(i)) * (kprev/dx(i-1)) &
-        / (kthis/dx(i) + kprev/dx(i-1))
-      dia(i) = -2.0_rk* (kthis/dx(i) * (kprev/dx(i-1)) &
-        / (kthis/dx(i) + kprev/dx(i-1)) &
-        + kthis/dx(i) * knext/dx(i+1) & 
-        / (kthis/dx(i) + knext/dx(i+1)))
-      sup(i) = 2.0_rk * (kthis/dx(i)) * (knext/dx(i+1)) &
-        / (kthis/dx(i) + knext/dx(i+1))
+      xprev = geometry_factor(xcenter(i-1))
+      xthis = geometry_factor(xcenter(i))
+      xnext = geometry_factor(xcenter(i+1))
+
+      sub(i-1) = 2.0_rk * (xthis*kthis/dx(i)) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1))
+      dia(i) = -2.0_rk* (xthis*kthis/dx(i) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1)) &
+        + xthis*kthis/dx(i) * xnext*knext/dx(i+1) & 
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1)))
+      sup(i) = 2.0_rk * (xthis*kthis/dx(i)) * (xnext*knext/dx(i+1)) &
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1))
 
     enddo ! i = 2,nx-1
 
@@ -67,18 +87,22 @@ contains
       case ('fixed')
         kprev = conductivity_fun(temperature(nx-1))
         kthis = conductivity_fun(temperature(nx))
-        sub(nx-1) = 2.0_rk * (kthis/dx(nx)) * (kprev/dx(nx-1)) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
-        dia(nx) = -2.0_rk * ((kthis/dx(nx)) * (kprev/dx(nx-1)) &
-          / (kthis/dx(nx) + kprev/dx(nx-1)) &
-          +  kthis/dx(1))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * ((xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xprev*kthis/dx(nx) + xprev*kprev/dx(nx-1)) &
+          +  xthis*kthis/dx(nx))
       case ('insulated')
         kprev = conductivity_fun(temperature(nx-1))
         kthis = conductivity_fun(temperature(nx))
-        sub(nx-1) = 2.0_rk * (kthis/dx(nx)) * (kprev/dx(nx-1)) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
-        dia(nx) = -2.0_rk * (kthis/dx(nx)) * (kprev/dx(nx-1)) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
       case default
         call output_write('ERROR: unknown value of bctype_right in build_matrix: ' &
           // trim(adjustl(bctype_right)))
@@ -132,11 +156,12 @@ contains
 
   endsubroutine finite_difference_build_source
 
-  subroutine finite_difference_solve(nx, xcenter, dx, &
+  subroutine finite_difference_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature)
     use linalg, only : trid, norm
     use output, only : output_write
+    character(*), intent(in) :: geometry
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
@@ -167,6 +192,19 @@ contains
     allocate(q(nx), qcpy(nx))
     allocate(temperature_old(nx))
 
+    select case (geometry)
+      case ('cartesian')
+        geometry_factor => geometry_factor_cartesian
+      case ('cylindrical')
+        geometry_factor => geometry_factor_cylindrical
+      case ('spherical')
+        geometry_factor => geometry_factor_spherical
+      case default
+        call output_write('ERROR: unknown geometry type: ' &
+          // trim(adjustl(geometry)))
+        stop
+    endselect
+
     call finite_difference_build_source(nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
 
@@ -179,7 +217,7 @@ contains
 
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
-      call finite_difference_build_matrix(nx, dx, temperature, &
+      call finite_difference_build_matrix(nx, xcenter, dx, temperature, &
         bctype_left, bctype_right, sub, dia, sup)
       q = qcpy
 
@@ -203,5 +241,20 @@ contains
     deallocate(q, qcpy)
     deallocate(sub, dia, sup)
   endsubroutine finite_difference_solve
+
+  pure real(rk) function geometry_factor_cartesian(x)
+    real(rk), intent(in) :: x
+    geometry_factor_cartesian = 1.0_rk
+  endfunction geometry_factor_cartesian
+
+  pure real(rk) function geometry_factor_cylindrical(x)
+    real(rk), intent(in) :: x
+    geometry_factor_cylindrical = x
+  endfunction geometry_factor_cylindrical
+
+  pure real(rk) function geometry_factor_spherical(x)
+    real(rk), intent(in) :: x
+    geometry_factor_spherical = x**2
+  endfunction geometry_factor_spherical
 
 endmodule finite_difference

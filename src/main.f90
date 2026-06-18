@@ -65,7 +65,7 @@ allocate(temperature(nx))
 
 select case (solver)
   case ('finite_difference')
-    call finite_difference_solve(nx, xcenter, dx, &
+    call finite_difference_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature)
   case default
