@@ -105,6 +105,10 @@ contains
       endselect
     enddo
 
+    if ((geometry == 'spherical') .or. (geometry == 'cylindrical')) then
+      bctype_left = 'insulated'
+    endif
+
     close(iunit)
   endsubroutine input_parse
 

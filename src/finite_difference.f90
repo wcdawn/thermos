@@ -37,7 +37,7 @@ contains
 
     ! BC at x=0, i=1
     select case (bctype_left)
-      case ('fixed') ! TODO consider cylindrical and spherical geometry
+      case ('fixed')
         kthis = conductivity_fun(temperature(1))
         knext = conductivity_fun(temperature(2))
         xthis = geometry_factor(xcenter(1))
