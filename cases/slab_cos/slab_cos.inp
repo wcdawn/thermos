@@ -1,7 +1,7 @@
 geometry cartesian
 length 10.
-nx 1024
-refine 10
+nx 10
+refine 0
 
 bctype_left fixed
 bctype_right fixed
