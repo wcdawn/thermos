@@ -8,6 +8,8 @@ use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_s
 use output, only : output_open_file, output_close_file, output_write, &
   output_temperature_csv
 use finite_difference, only : finite_difference_solve_cartesian
+use source_function, only : source_function_init
+use conductivity_function, only : conductivity_function_init
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, fname_temperature
@@ -51,6 +53,9 @@ enddo ! i = 1,refine
 
 call output_write('(after refinement)')
 call geometry_summary(nx, dx)
+
+call source_function_init('cos')
+call conductivity_function_init('constant')
 
 allocate(temperature(nx))
 
