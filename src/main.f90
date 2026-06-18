@@ -2,6 +2,7 @@ program thermos
 use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
   geometry, length, nx, refine, &
+  bctype_left, bctype_right, bcval_left, bcval_right, &
   solver, max_iter, tol_temperature, init_temperature
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write, &
@@ -56,6 +57,7 @@ allocate(temperature(nx))
 select case (trim(adjustl(solver)) // '_' // trim(adjustl(geometry)))
   case ('finite_difference_cartesian')
     call finite_difference_solve_cartesian(nx, xcenter, dx, &
+      bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature)
   case default
     call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))

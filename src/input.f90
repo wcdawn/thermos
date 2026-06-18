@@ -13,9 +13,15 @@ integer(ik) :: max_iter = 10 ! Maximum number of Picard iterations
 real(rk) :: tol_temperature = 0.5_rk ! [K] Tolerance for Picard iterations (max.  abs. diff.)
 real(rk) :: init_temperature = 300.0_rk ! [K] Initial estimate for temperature (uniform)
 
+character(16) :: bctype_left = 'fixed'
+character(16) :: bctype_right= 'fixed'
+real(rk) :: bcval_left = 600.0_rk
+real(rk) :: bcval_right = 300.0_rk
+
 ! variables
 public :: geometry, length, nx, refine
 public :: solver, max_iter, tol_temperature, init_temperature
+public :: bctype_left, bctype_right, bcval_left, bcval_right
 
 ! subroutines
 public :: input_parse, input_summary
@@ -62,6 +68,14 @@ contains
           read(iunit, *) card, nx
         case ('refine')
           read(iunit, *) card, refine
+        case ('bctype_left')
+          read(iunit, *) card, bctype_left
+        case ('bctype_right')
+          read(iunit, *) card, bctype_right
+        case ('bcval_left')
+          read(iunit, *) card, bcval_left
+        case ('bcval_right')
+          read(iunit, *) card, bcval_right
         case default
           write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
           write(*, '(a)') trim(adjustl(line))
@@ -91,6 +105,12 @@ contains
     write(line, '(a,es9.2)') 'Temperature Tolerance [K]: ', tol_temperature
     call output_write(line)
     write(line, '(a,es9.2)') 'Initial Temperature [K]: ', init_temperature
+    call output_write(line)
+    call output_write('Boundary conditions.' &
+      // ' Left: ' // trim(adjustl(bctype_left)) &
+      // ' Right: ' // trim(adjustl(bctype_right)))
+    write(line, '(a,a,es9.2,a,es9.2)') 'Boundary values.', &
+      ' Left: ', bcval_left, ' Right: ',bcval_right
     call output_write(line)
     call output_write('')
   endsubroutine input_summary

@@ -115,12 +115,17 @@ contains
   endsubroutine finite_difference_build_source_cartesian
 
   subroutine finite_difference_solve_cartesian(nx, xcenter, dx, &
+      bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature)
     use linalg, only : trid, norm
     use output, only : output_write
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
+
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(in) :: bcval_left, bcval_right
+
     integer(ik), intent(in) :: max_iter
     real(rk), intent(in) :: tol_temperature ! [K]
     real(rk), intent(in) :: init_temperature ! [K]
@@ -145,7 +150,7 @@ contains
     allocate(temperature_old(nx))
 
     call finite_difference_build_source_cartesian(nx, xcenter, dx, &
-      'fixed', 'fixed', 600.0_rk, 300.0_rk, qcpy)
+      bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
 
     temperature = init_temperature
 
@@ -157,7 +162,7 @@ contains
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
       call finite_difference_build_matrix_cartesian(nx, dx, temperature, &
-        'fixed', 'fixed', sub, dia, sup)
+        bctype_left, bctype_right, sub, dia, sup)
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)

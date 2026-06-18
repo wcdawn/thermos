@@ -1,3 +1,8 @@
 geometry cartesian
 length 10.
 nx 1024
+
+bctype_left fixed
+bctype_right fixed
+bcval_left 600.
+bcval_right 300.
