@@ -1,0 +1,14 @@
+geometry cylindrical
+length 0.75
+nx 10
+refine 10
+
+bctype_right fixed
+bcval_right 600.
+
+conductivity_function constant
+conductivity_coeff 0.5 /
+source_function linear
+source_coeff 500.0 0.75 /
+
+analysis_name cyl_lin

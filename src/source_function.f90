@@ -31,6 +31,8 @@ contains
     select case (source_name)
       case ('cos')
         source_fun => source_fun_cos
+      case ('linear')
+        source_fun => source_fun_linear
       case default
         call output_write('ERROR: Unknown name of source function: ' &
           // trim(adjustl(source_name)))
@@ -41,12 +43,19 @@ contains
   pure real(rk) function source_fun_cos(x)
     use constants, only : pi
     real(rk), intent(in) :: x ! [cm] position
-    real(rk) :: q0
-    real(rk) :: L
+    real(rk) :: q0, L
     q0 = coeff(1)
     L  = coeff(2)
     source_fun_cos = q0 * cos(pi * x * 0.5_rk / L)
   endfunction source_fun_cos
+
+  pure real(rk) function source_fun_linear(x)
+    real(rk), intent(in) :: x ! [cm] position
+    real(rk) :: q0, R
+    q0 = coeff(1)
+    R = coeff(2)
+    source_fun_linear = q0 * (1.0_rk - x/R)
+  endfunction source_fun_linear
 
   subroutine source_function_cleanup()
     deallocate(coeff)

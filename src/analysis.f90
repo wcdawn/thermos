@@ -24,8 +24,9 @@ contains
 
     select case (analysis_name)
       case ('slab_cos')
-        ! do something
         call temperature_exact_slab_cos(nx, xcenter, texact)
+      case ('cyl_lin')
+        call temperature_exact_cyl_lin(nx, xcenter, texact)
       case default
         call output_write('ERROR: unknown analysis name: ' // &
           trim(adjustl(analysis_name)))
@@ -59,7 +60,26 @@ contains
       texact(i) = T0 &
         + (x(i)/L) * (TL - T0 + q0/k * (2.0_rk*L/pi)**2) &
         + q0/k * (2.0_rk*L/pi)**2 * (cos(pi*x(i)*0.5_rk/L) - 1.0_rk)
-    enddo
+    enddo ! i = 1,nx
   endsubroutine temperature_exact_slab_cos
+
+  subroutine temperature_exact_cyl_lin(nx, x, texact)
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: x(:) ! (nx)
+    real(rk), intent(out) :: texact(:) ! (nx)
+
+    integer(ik) :: i
+
+    real(rk), parameter :: k0 = 0.5_rk
+    real(rk), parameter :: q0 = 500.0_rk
+    real(rk), parameter :: TR = 600.0_rk
+    real(rk), parameter :: R = 0.75_rk
+
+    do i = 1,nx
+      texact(i) = -q0/k0 * (x(i)**2*0.25_rk - x(i)**3/(9.0*R)) &
+        + TR + q0/k0 * 5.0_rk/36.0_rk * R**2
+      write(999, '(es13.6," , ",es13.6)') x(i), texact(i)
+    enddo ! i = 1,nx
+  endsubroutine temperature_exact_cyl_lin
 
 endmodule analysis
