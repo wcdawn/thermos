@@ -1,0 +1,14 @@
+geometry spherical
+length 3.0
+nx 10
+refine 10
+
+bctype_right fixed
+bcval_right 600.
+
+conductivity_function constant
+conductivity_coeff 0.75 /
+source_function linear
+source_coeff 200.0 3.0 /
+
+analysis_name sph_lin

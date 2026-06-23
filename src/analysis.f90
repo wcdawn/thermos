@@ -27,6 +27,8 @@ contains
         call temperature_exact_slab_cos(nx, xcenter, texact)
       case ('cyl_lin')
         call temperature_exact_cyl_lin(nx, xcenter, texact)
+      case ('sph_lin')
+        call temperature_exact_sph_lin(nx, xcenter, texact)
       case default
         call output_write('ERROR: unknown analysis name: ' // &
           trim(adjustl(analysis_name)))
@@ -70,15 +72,36 @@ contains
 
     integer(ik) :: i
 
+    ! TODO Try to be more clever about these
     real(rk), parameter :: k0 = 0.5_rk
     real(rk), parameter :: q0 = 500.0_rk
     real(rk), parameter :: TR = 600.0_rk
     real(rk), parameter :: R = 0.75_rk
 
     do i = 1,nx
-      texact(i) = -q0/k0 * (x(i)**2*0.25_rk - x(i)**3/(9.0*R)) &
+      texact(i) = -q0/k0 * (x(i)**2*0.25_rk - x(i)**3/(9.0_rk*R)) &
         + TR + q0/k0 * 5.0_rk/36.0_rk * R**2
     enddo ! i = 1,nx
   endsubroutine temperature_exact_cyl_lin
+
+  subroutine temperature_exact_sph_lin(nx, x, texact)
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: x(:) ! (nx)
+    real(rk), intent(out) :: texact(:) ! (nx)
+
+    integer(ik) :: i
+
+    ! TODO Try to be more clever about these
+    real(rk), parameter :: k0 = 0.75_rk
+    real(rk), parameter :: q0 = 200.0_rk
+    real(rk), parameter :: TR = 600.0_rk
+    real(rk), parameter :: R = 3.0_rk
+
+    do i = 1,nx
+      texact(i) = -q0/k0 * (x(i)**2/6.0_rk - x(i)**3/(12.0_rk*R)) &
+        + TR + q0/k0 * R**2/12.0_rk
+      write(999, '(es13.6)') texact(i)
+    enddo ! i = 1,nx
+  endsubroutine temperature_exact_sph_lin
 
 endmodule analysis
