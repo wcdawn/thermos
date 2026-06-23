@@ -147,11 +147,11 @@ contains
 
     select case(bctype_right)
       case ('fixed')
-        xthis = geometry_factor(xcenter(i))
+        xthis = geometry_factor(xcenter(nx))
         src(nx) = dx(nx) * xthis * source_fun(xcenter(nx)) &
           + 2.0_rk * xthis * conductivity_fun(Tright) / dx(nx) * Tright
       case ('insulated')
-        xthis = geometry_factor(xcenter(i))
+        xthis = geometry_factor(xcenter(nx))
         src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
       case default
         call output_write('ERROR: unknown value of bctype_right in build_source: ' &
