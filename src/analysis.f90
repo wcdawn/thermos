@@ -78,7 +78,6 @@ contains
     do i = 1,nx
       texact(i) = -q0/k0 * (x(i)**2*0.25_rk - x(i)**3/(9.0*R)) &
         + TR + q0/k0 * 5.0_rk/36.0_rk * R**2
-      write(999, '(es13.6," , ",es13.6)') x(i), texact(i)
     enddo ! i = 1,nx
   endsubroutine temperature_exact_cyl_lin
 
