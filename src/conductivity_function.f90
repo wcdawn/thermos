@@ -31,6 +31,8 @@ contains
     select case (conductivity_name)
       case ('constant')
         conductivity_fun => conductivity_fun_const
+      case ('linear')
+        conductivity_fun => conductivity_fun_linear
       case default
         call output_write('ERROR: Unknown name of conductivity function: ' &
           // trim(adjustl(conductivity_name)))
@@ -44,6 +46,14 @@ contains
     k0 = coeff(1)
     conductivity_fun_const = k0
   endfunction conductivity_fun_const
+
+  pure real(rk) function conductivity_fun_linear(T)
+    real(rk), intent(in) :: T ! [K] temperature
+    real(rk) :: k0, beta
+    k0 = coeff(1)
+    beta = coeff(2)
+    conductivity_fun_linear = k0 - beta * T
+  endfunction conductivity_fun_linear
 
   subroutine conductivity_function_cleanup()
     deallocate(coeff)

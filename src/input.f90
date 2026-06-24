@@ -82,6 +82,14 @@ contains
           read(iunit, *) card, nx
         case ('refine')
           read(iunit, *) card, refine
+
+        case ('max_iter')
+          read(iunit, *) card, max_iter
+        case ('tol_temperature')
+          read(iunit, *) card, tol_temperature
+        case ('init_temperature')
+          read(iunit, *) card, init_temperature
+
         case ('bctype_left')
           read(iunit, *) card, bctype_left
         case ('bctype_right')

@@ -22,7 +22,7 @@ procedure(f), pointer :: geo_xsrc => null()
 contains
 
   subroutine finite_difference_build_matrix(nx, xcenter, dx, temperature, &
-      bctype_left, bctype_right, sub, dia, sup)
+      bctype_left, bctype_right, Tleft, Tright, sub, dia, sup)
     use conductivity_function, only : conductivity_fun
     use output, only : output_write
     integer(ik), intent(in) :: nx
@@ -30,6 +30,7 @@ contains
     real(rk), intent(in) :: dx(:) ! (nx)
     real(rk), intent(in) :: temperature(:) ! (nx)
     character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(in) :: Tleft, Tright
     real(rk), intent(out) :: sub(:) ! (nx-1)
     real(rk), intent(out) :: dia(:) ! (nx)
     real(rk), intent(out) :: sup(:) ! (nx-1)
@@ -41,7 +42,7 @@ contains
     ! BC at x=0, i=1
     select case (bctype_left)
       case ('fixed')
-        kthis = conductivity_fun(temperature(1))
+        kthis = conductivity_fun(Tleft)
         knext = conductivity_fun(temperature(2))
         xnext = geo_xnext(xcenter(1), dx(1))
         xprev = geo_xprev(xcenter(1), dx(1))
@@ -94,7 +95,7 @@ contains
           / (kthis/dx(nx) + kprev/dx(nx-1))
         dia(nx) = -2.0_rk * xprev * kthis/dx(nx) * kprev/dx(nx-1) &
           / (kthis/dx(nx) + kprev/dx(nx-1)) &
-          -  2.0_rk*xnext*kthis/dx(nx)
+          -  2.0_rk*xnext*conductivity_fun(Tright)/dx(nx)
       case ('insulated')
         kprev = conductivity_fun(temperature(nx-1))
         kthis = conductivity_fun(temperature(nx))
@@ -209,7 +210,7 @@ contains
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
       call finite_difference_build_matrix(nx, xcenter, dx, temperature, &
-        bctype_left, bctype_right, sub, dia, sup)
+        bctype_left, bctype_right, bcval_left, bcval_right, sub, dia, sup)
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)

@@ -1,0 +1,19 @@
+geometry cartesian
+length 5.
+nx 1024
+refine 0
+
+bctype_left fixed
+bctype_right fixed
+bcval_left 500.
+bcval_right 300.
+
+conductivity_function linear
+conductivity_coeff 10. 1d-2 /
+source_function cos
+source_coeff 400.0 5.0 /
+
+max_iter 1000
+tol_temperature 1e-20
+
+analysis_name slab_cos_klin

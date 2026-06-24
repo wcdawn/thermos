@@ -44,7 +44,7 @@ main.o : kind.o input.o geometry.o output.o finite_difference.o source_function.
 kind.o : 
 input.o : kind.o fileio.o output.o finite_difference.o
 fileio.o :
-geometry.o : kind.o output.o
+geometry.o : kind.o output.o constants.o
 output.o : fileio.o kind.o
 finite_difference.o : kind.o linalg.o output.o source_function.o conductivity_function.o
 linalg.o : kind.o
