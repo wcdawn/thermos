@@ -51,4 +51,4 @@ linalg.o : kind.o
 constants.o : kind.o
 source_function.o : kind.o constants.o output.o
 conductivity_function.o : kind.o output.o
-analysis.o : kind.o output.o linalg.o
+analysis.o : kind.o output.o linalg.o fileio.o

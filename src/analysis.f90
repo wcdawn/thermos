@@ -8,10 +8,11 @@ public :: analysis_analyze
 
 contains
 
-  subroutine analysis_analyze(analysis_name, nx, xcenter, temperature)
+  subroutine analysis_analyze(analysis_name, fname_out, nx, xcenter, temperature)
     use output, only : output_write
     use linalg, only : norm
     character(*), intent(in) :: analysis_name
+    character(*), intent(in) :: fname_out
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: temperature(:) ! (nx)
@@ -38,6 +39,8 @@ contains
     call output_write('=== ANALYSIS SUMMARY ===')
     write(line, '(a,es9.2)') 'Linf error = ', norm(-1, temperature - texact)
     call output_write(line)
+    call output_write('Writing analysis output on: ' // trim(adjustl(fname_out)))
+    call analysis_output(fname_out, nx, xcenter, temperature, texact)
     call output_write('')
 
     deallocate(texact)
@@ -102,5 +105,28 @@ contains
         + TR + q0/k0 * R**2/12.0_rk
     enddo ! i = 1,nx
   endsubroutine temperature_exact_sph_lin
+
+  subroutine analysis_output(fname, nx, xc, t, texact)
+    use fileio, only : fileio_open_write
+    character(*), intent(in) :: fname
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xc(:) ! (nx)
+    real(rk), intent(in) :: t(:) ! (nx)
+    real(rk), intent(in) :: texact(:) ! (nx)
+
+    integer(ik) :: i
+
+    integer, parameter :: iout = 12
+
+    call fileio_open_write(fname, iout)
+
+    write(iout, '(a)') 'x [cm] , T [K] , Texact [K]'
+    do i = 1,nx
+      write(iout, '(es23.16, " , ", es23.16, " , ", es23.16)') &
+        xc(i), t(i), texact(i)
+    enddo ! i = 1,nx
+
+    close(iout)
+  endsubroutine analysis_output
 
 endmodule analysis

@@ -16,7 +16,8 @@ use conductivity_function, only : conductivity_function_init, conductivity_funct
 use analysis, only : analysis_analyze
 implicit none
 
-character(1024) :: fname_input, fname_stub, fname_out, fname_temperature
+character(1024) :: fname_input, fname_stub, fname_out, &
+  fname_temperature, fname_analysis
 
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
@@ -34,6 +35,7 @@ i = index(trim(adjustl(fname_input)), '.', back=.true.) - 1
 fname_stub = fname_input(:i)
 fname_out = trim(adjustl(fname_stub)) // '.out'
 fname_temperature = trim(adjustl(fname_stub)) // '_temperature.csv'
+fname_analysis = trim(adjustl(fname_stub)) // '_analysis.csv'
 
 call output_open_file(fname_out)
 
@@ -74,7 +76,7 @@ select case (solver)
 endselect
 
 if (analysis_name /= 'none') then
-  call analysis_analyze(analysis_name, nx, xcenter, temperature)
+  call analysis_analyze(analysis_name, fname_analysis, nx, xcenter, temperature)
 endif
 
 call output_write('Writing temperautre output on: ' // &
