@@ -1,7 +1,7 @@
 program thermos
 use kind, only : rk, ik
 use input, only : input_parse, input_summary, &
-  geometry, length, nx, refine, &
+  geometry, length, nx, refine, mesh_spacing, &
   bctype_left, bctype_right, bcval_left, bcval_right, &
   solver, max_iter, tol_temperature, init_temperature, &
   conductivity_function_name, conductivity_coeff, &
@@ -48,7 +48,7 @@ call input_summary()
 
 allocate(xcenter(nx))
 allocate(dx(nx))
-call geometry_calculate_coordinates(length, nx, xcenter, dx)
+call geometry_calculate_coordinates(mesh_spacing, length, nx, xcenter, dx)
 
 call output_write('(before refinement)')
 call geometry_summary(nx, dx)

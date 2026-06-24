@@ -25,10 +25,12 @@ real(rk) :: source_coeff(4) = [ 20.0, 10.0, 0.0, 0.0 ]
 character(16) :: conductivity_function_name = 'constant'
 real(rk) :: conductivity_coeff(4) = [ 1.2, 0.0, 0.0, 0.0 ]
 
+character(16) :: mesh_spacing = 'uniform'
+
 character(16) :: analysis_name = 'none'
 
 ! variables
-public :: geometry, length, nx, refine
+public :: geometry, length, nx, refine, mesh_spacing
 public :: solver, max_iter, tol_temperature, init_temperature
 public :: bctype_left, bctype_right, bcval_left, bcval_right
 public :: conductivity_function_name, conductivity_coeff
@@ -96,6 +98,8 @@ contains
           read(iunit, *) card, conductivity_function_name
         case ('conductivity_coeff')
           read(iunit, *) card, conductivity_coeff ! NOTE: fortran array input
+        case ('mesh_spacing')
+          read(iunit, *) card, mesh_spacing
         case ('analysis_name')
           read(iunit, *) card, analysis_name
         case default
@@ -122,6 +126,8 @@ contains
     write(line, '(a,es13.6)') 'Length: ', length
     call output_write(line)
     write(line, '(a,i0)') 'NX: ', nx
+    call output_write(line)
+    write(line, '(a,a)') 'Mesh spacing: ', trim(adjustl(mesh_spacing))
     call output_write(line)
     write(line, '(a,i0)') 'Uniform Refinement: ', refine
     call output_write(line)

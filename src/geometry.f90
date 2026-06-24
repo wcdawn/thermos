@@ -8,23 +8,36 @@ public :: geometry_calculate_coordinates, geometry_refine, geometry_summary
 
 contains
 
-  subroutine geometry_calculate_coordinates(length, nx, xcenter, dx)
+  subroutine geometry_calculate_coordinates(mesh_spacing, length, nx, xcenter, dx)
+    use output, only : output_write
+    character(*), intent(in) :: mesh_spacing
     real(rk), intent(in) :: length
     integer(ik), intent(in) :: nx
     real(rk), intent(out) :: xcenter(:) ! Center coordinate for cell [cm]
     real(rk), intent(out) :: dx(:) ! Cell-width [cm]
     
-    real(rk) :: h
+    select case (mesh_spacing)
+      case ('uniform')
+        call geometry_uniform_mesh(length, nx, dx)
+      case ('area')
+        call geometry_uniform_mesh(length, nx, dx) ! TODO
+      case ('volume')
+        call geometry_uniform_mesh(length, nx, dx) ! TODO
+      case default
+        call output_write('ERROR: unknown mesh spacing: ' // &
+          trim(adjustl(mesh_spacing)))
+        stop
+    endselect
 
-    ! NOTE: For now, this calculates uniformly spaced coordinates regardless of
-    ! the geometry. In the future, it would be nice to support equal-area
-    ! (cylindrical) and equal-volume (spherical) coordiantes for other
-    ! geometries.
-
-    h = length / nx
-    dx = h
     call geometry_dx2xcenter(nx, dx, xcenter)
   endsubroutine geometry_calculate_coordinates
+
+  subroutine geometry_uniform_mesh(length, nx, dx)
+    real(rk), intent(in) :: length
+    integer(ik), intent(in) :: nx
+    real(rk), intent(out) :: dx(:) ! (nx)
+    dx = length / nx
+  endsubroutine geometry_uniform_mesh
 
   subroutine geometry_refine(nx, xcenter, dx)
     integer(ik), intent(inout) :: nx
