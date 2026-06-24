@@ -18,7 +18,7 @@ procedure(geo), pointer :: geometry_factor => null()
 
 contains
 
-  subroutine finite_difference_build_matrix(nx, xcenter, dx, temperature, &
+  subroutine finite_difference_build_matrix_cartesian(nx, xcenter, dx, temperature, &
       bctype_left, bctype_right, sub, dia, sup)
     use conductivity_function, only : conductivity_fun
     use output, only : output_write
@@ -57,7 +57,7 @@ contains
         sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
           / (xthis*kthis/dx(1) + xnext*knext/dx(2))
       case default
-        call output_write('ERROR: unknown value of bctype_left in build_matrix: ' &
+        call output_write('ERROR: unknown value of bctype_left in build_matrix_cartesian: ' &
           // trim(adjustl(bctype_left)))
         stop
     endselect
@@ -104,14 +104,197 @@ contains
         dia(nx) = -2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
           / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
       case default
-        call output_write('ERROR: unknown value of bctype_right in build_matrix: ' &
+        call output_write('ERROR: unknown value of bctype_right in build_matrix_cartesian: ' &
           // trim(adjustl(bctype_right)))
         stop
     endselect
+  endsubroutine finite_difference_build_matrix_cartesian
 
-  endsubroutine finite_difference_build_matrix
+  subroutine finite_difference_build_matrix_cylindrical(nx, xcenter, dx, temperature, &
+      bctype_left, bctype_right, sub, dia, sup)
+    use conductivity_function, only : conductivity_fun
+    use output, only : output_write
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+    real(rk), intent(in) :: dx(:) ! (nx)
+    real(rk), intent(in) :: temperature(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(out) :: sub(:) ! (nx-1)
+    real(rk), intent(out) :: dia(:) ! (nx)
+    real(rk), intent(out) :: sup(:) ! (nx-1)
 
-  subroutine finite_difference_build_source(nx, xcenter, dx, &
+    integer(ik) :: i
+    real(rk) :: kprev, kthis, knext
+    real(rk) :: xprev, xthis, xnext
+
+    ! BC at x=0, i=1
+    select case (bctype_left)
+      case ('fixed')
+        kthis = conductivity_fun(temperature(1))
+        knext = conductivity_fun(temperature(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * ((xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2)) &
+          + xthis*kthis/dx(1))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+      case ('insulated')
+        kthis = conductivity_fun(temperature(1))
+        knext = conductivity_fun(temperature(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_matrix_cylindrical: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
+
+    do i = 2,nx-1
+
+      kprev = conductivity_fun(temperature(i-1))
+      kthis = conductivity_fun(temperature(i))
+      knext = conductivity_fun(temperature(i+1))
+
+      xprev = geometry_factor(xcenter(i-1))
+      xthis = geometry_factor(xcenter(i))
+      xnext = geometry_factor(xcenter(i+1))
+
+      sub(i-1) = 2.0_rk * (xthis*kthis/dx(i)) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1))
+      dia(i) = -2.0_rk* (xthis*kthis/dx(i) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1)) &
+        + xthis*kthis/dx(i) * xnext*knext/dx(i+1) & 
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1)))
+      sup(i) = 2.0_rk * (xthis*kthis/dx(i)) * (xnext*knext/dx(i+1)) &
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1))
+
+    enddo ! i = 2,nx-1
+
+    select case (bctype_right)
+      case ('fixed')
+        kprev = conductivity_fun(temperature(nx-1))
+        kthis = conductivity_fun(temperature(nx))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * ((xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xprev*kthis/dx(nx) + xprev*kprev/dx(nx-1)) &
+          +  xthis*kthis/dx(nx))
+      case ('insulated')
+        kprev = conductivity_fun(temperature(nx-1))
+        kthis = conductivity_fun(temperature(nx))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_matrix_cylindrical: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+  endsubroutine finite_difference_build_matrix_cylindrical
+
+  subroutine finite_difference_build_matrix_spherical(nx, xcenter, dx, temperature, &
+      bctype_left, bctype_right, sub, dia, sup)
+    use conductivity_function, only : conductivity_fun
+    use output, only : output_write
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+    real(rk), intent(in) :: dx(:) ! (nx)
+    real(rk), intent(in) :: temperature(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(out) :: sub(:) ! (nx-1)
+    real(rk), intent(out) :: dia(:) ! (nx)
+    real(rk), intent(out) :: sup(:) ! (nx-1)
+
+    integer(ik) :: i
+    real(rk) :: kprev, kthis, knext
+    real(rk) :: xprev, xthis, xnext
+
+    ! BC at x=0, i=1
+    select case (bctype_left)
+      case ('fixed')
+        kthis = conductivity_fun(temperature(1))
+        knext = conductivity_fun(temperature(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * ((xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2)) &
+          + xthis*kthis/dx(1))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+      case ('insulated')
+        kthis = conductivity_fun(temperature(1))
+        knext = conductivity_fun(temperature(2))
+        xthis = geometry_factor(xcenter(1))
+        xnext = geometry_factor(xcenter(2))
+        dia(1) = -2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+        sup(1) = 2.0_rk * (xthis*kthis/dx(1)) * (xnext*knext/dx(2)) &
+          / (xthis*kthis/dx(1) + xnext*knext/dx(2))
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_matrix_spherical: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
+
+    do i = 2,nx-1
+
+      kprev = conductivity_fun(temperature(i-1))
+      kthis = conductivity_fun(temperature(i))
+      knext = conductivity_fun(temperature(i+1))
+
+      xprev = geometry_factor(xcenter(i-1))
+      xthis = geometry_factor(xcenter(i))
+      xnext = geometry_factor(xcenter(i+1))
+
+      sub(i-1) = 2.0_rk * (xthis*kthis/dx(i)) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1))
+      dia(i) = -2.0_rk* (xthis*kthis/dx(i) * (xprev*kprev/dx(i-1)) &
+        / (xthis*kthis/dx(i) + xprev*kprev/dx(i-1)) &
+        + xthis*kthis/dx(i) * xnext*knext/dx(i+1) & 
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1)))
+      sup(i) = 2.0_rk * (xthis*kthis/dx(i)) * (xnext*knext/dx(i+1)) &
+        / (xthis*kthis/dx(i) + xnext*knext/dx(i+1))
+
+    enddo ! i = 2,nx-1
+
+    select case (bctype_right)
+      case ('fixed')
+        kprev = conductivity_fun(temperature(nx-1))
+        kthis = conductivity_fun(temperature(nx))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * ((xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xprev*kthis/dx(nx) + xprev*kprev/dx(nx-1)) &
+          +  xthis*kthis/dx(nx))
+      case ('insulated')
+        kprev = conductivity_fun(temperature(nx-1))
+        kthis = conductivity_fun(temperature(nx))
+        xprev = geometry_factor(xcenter(nx-1))
+        xthis = geometry_factor(xcenter(nx))
+        sub(nx-1) = 2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+        dia(nx) = -2.0_rk * (xthis*kthis/dx(nx)) * (xprev*kprev/dx(nx-1)) &
+          / (xthis*kthis/dx(nx) + xprev*kprev/dx(nx-1))
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_matrix_spherical: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+  endsubroutine finite_difference_build_matrix_spherical
+
+  subroutine finite_difference_build_source_cartesian(nx, xcenter, dx, &
       bctype_left, bctype_right, Tleft, Tright, src)
     use source_function, only : source_fun
     use conductivity_function, only : conductivity_fun
@@ -135,7 +318,7 @@ contains
         xthis = geometry_factor(xcenter(1))
         src(1) = dx(1) * xthis * source_fun(xcenter(1))
       case default
-        call output_write('ERROR: unknown value of bctype_left in build_source: ' &
+        call output_write('ERROR: unknown value of bctype_left in build_source_cartesian: ' &
           // trim(adjustl(bctype_left)))
         stop
     endselect
@@ -154,13 +337,112 @@ contains
         xthis = geometry_factor(xcenter(nx))
         src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
       case default
-        call output_write('ERROR: unknown value of bctype_right in build_source: ' &
+        call output_write('ERROR: unknown value of bctype_right in build_source_cartesian: ' &
           // trim(adjustl(bctype_right)))
         stop
     endselect
     src = -src
+  endsubroutine finite_difference_build_source_cartesian
 
-  endsubroutine finite_difference_build_source
+  subroutine finite_difference_build_source_cylindrical(nx, xcenter, dx, &
+      bctype_left, bctype_right, Tleft, Tright, src)
+    use source_function, only : source_fun
+    use conductivity_function, only : conductivity_fun
+    use output, only : output_write
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+    real(rk), intent(in) :: dx(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(in) :: Tleft, Tright
+    real(rk), intent(out) :: src(:) ! (nx)
+    
+    integer(ik) :: i
+    real(rk) :: xthis
+
+    select case(bctype_left)
+      case ('fixed')
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1)) &
+          + 2.0_rk * xthis * conductivity_fun(Tleft) / dx(1) * Tleft
+      case ('insulated')
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1))
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_source_cylindrical: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
+
+    do i = 2,nx-1
+      xthis = geometry_factor(xcenter(i))
+      src(i) = dx(i) * xthis * source_fun(xcenter(i))
+    enddo ! i = 2,nx-1
+
+    select case(bctype_right)
+      case ('fixed')
+        xthis = geometry_factor(xcenter(nx))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx)) &
+          + 2.0_rk * xthis * conductivity_fun(Tright) / dx(nx) * Tright
+      case ('insulated')
+        xthis = geometry_factor(xcenter(nx))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_source_cylindrical: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+    src = -src
+  endsubroutine finite_difference_build_source_cylindrical
+
+  subroutine finite_difference_build_source_spherical(nx, xcenter, dx, &
+      bctype_left, bctype_right, Tleft, Tright, src)
+    use source_function, only : source_fun
+    use conductivity_function, only : conductivity_fun
+    use output, only : output_write
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+    real(rk), intent(in) :: dx(:) ! (nx)
+    character(*), intent(in) :: bctype_left, bctype_right
+    real(rk), intent(in) :: Tleft, Tright
+    real(rk), intent(out) :: src(:) ! (nx)
+    
+    integer(ik) :: i
+    real(rk) :: xthis
+
+    select case(bctype_left)
+      case ('fixed')
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1)) &
+          + 2.0_rk * xthis * conductivity_fun(Tleft) / dx(1) * Tleft
+      case ('insulated')
+        xthis = geometry_factor(xcenter(1))
+        src(1) = dx(1) * xthis * source_fun(xcenter(1))
+      case default
+        call output_write('ERROR: unknown value of bctype_left in build_source_spherical: ' &
+          // trim(adjustl(bctype_left)))
+        stop
+    endselect
+
+    do i = 2,nx-1
+      xthis = geometry_factor(xcenter(i))
+      src(i) = dx(i) * xthis * source_fun(xcenter(i))
+    enddo ! i = 2,nx-1
+
+    select case(bctype_right)
+      case ('fixed')
+        xthis = geometry_factor(xcenter(nx))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx)) &
+          + 2.0_rk * xthis * conductivity_fun(Tright) / dx(nx) * Tright
+      case ('insulated')
+        xthis = geometry_factor(xcenter(nx))
+        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
+      case default
+        call output_write('ERROR: unknown value of bctype_right in build_source_spherical: ' &
+          // trim(adjustl(bctype_right)))
+        stop
+    endselect
+    src = -src
+  endsubroutine finite_difference_build_source_spherical
 
   subroutine finite_difference_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
@@ -211,8 +493,19 @@ contains
         stop
     endselect
 
-    call finite_difference_build_source(nx, xcenter, dx, &
-      bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
+    select case (geometry)
+      case ('cartesian')
+        call finite_difference_build_source_cartesian(nx, xcenter, dx, &
+          bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
+      case ('cylindrical')
+        call finite_difference_build_source_cylindrical(nx, xcenter, dx, &
+          bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
+      case ('spherical')
+        call finite_difference_build_source_spherical(nx, xcenter, dx, &
+          bctype_left, bctype_right, bcval_left, bcval_right, qcpy)
+      case default
+        call output_write('ERROR1 : Unknown geometry in finite_difference_solve: ' // trim(adjustl(geometry)))
+    endselect
 
     temperature = init_temperature
 
@@ -223,8 +516,20 @@ contains
 
       ! must rebuild matrix since thermal conductivity may change on each iteration
       ! must copy the source since it is used as scratch space by trid
-      call finite_difference_build_matrix(nx, xcenter, dx, temperature, &
-        bctype_left, bctype_right, sub, dia, sup)
+      select case (geometry)
+        case ('cartesian')
+          call finite_difference_build_matrix_cartesian(nx, xcenter, dx, temperature, &
+            bctype_left, bctype_right, sub, dia, sup)
+        case ('cylindrical')
+          call finite_difference_build_matrix_cylindrical(nx, xcenter, dx, temperature, &
+            bctype_left, bctype_right, sub, dia, sup)
+        case ('spherical')
+          call finite_difference_build_matrix_spherical(nx, xcenter, dx, temperature, &
+            bctype_left, bctype_right, sub, dia, sup)
+        case default
+          call output_write('ERROR: unknown geometry in finite_difference_solve: ' // trim(adjustl(geometry)))
+          stop
+      endselect
       q = qcpy
 
       call trid(nx, sub, dia, sup, q, temperature)
