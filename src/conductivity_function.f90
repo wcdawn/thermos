@@ -21,7 +21,6 @@ real(rk), allocatable :: coeff(:)
 contains
 
   subroutine conductivity_function_init(conductivity_name, coeff_in)
-    use output, only : output_write
     character(*), intent(in) :: conductivity_name
     real(rk), intent(in) :: coeff_in(:)
 
@@ -34,8 +33,8 @@ contains
       case ('linear')
         conductivity_fun => conductivity_fun_linear
       case default
-        call output_write('ERROR: Unknown name of conductivity function: ' &
-          // trim(adjustl(conductivity_name)))
+        write(*,*) 'ERROR: Unknown name of conductivity function: ' &
+          // trim(adjustl(conductivity_name))
         stop
     endselect
   endsubroutine conductivity_function_init

@@ -21,7 +21,6 @@ real(rk), allocatable :: coeff(:)
 contains
 
   subroutine source_function_init(source_name, coeff_in)
-    use output, only : output_write
     character(*), intent(in) :: source_name
     real(rk), intent(in) :: coeff_in(:)
 
@@ -34,8 +33,8 @@ contains
       case ('linear')
         source_fun => source_fun_linear
       case default
-        call output_write('ERROR: Unknown name of source function: ' &
-          // trim(adjustl(source_name)))
+        write(*,*) 'ERROR: Unknown name of source function: ' &
+          // trim(adjustl(source_name))
         stop
     endselect
   endsubroutine source_function_init
