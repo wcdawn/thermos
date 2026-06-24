@@ -20,7 +20,7 @@ contains
       case ('uniform')
         call geometry_uniform_mesh(length, nx, dx)
       case ('area')
-        call geometry_uniform_mesh(length, nx, dx) ! TODO
+        call geometry_area_mesh(length, nx, dx)
       case ('volume')
         call geometry_uniform_mesh(length, nx, dx) ! TODO
       case default
@@ -38,6 +38,44 @@ contains
     real(rk), intent(out) :: dx(:) ! (nx)
     dx = length / nx
   endsubroutine geometry_uniform_mesh
+
+  subroutine geometry_area_mesh(length, nx, dx)
+    use constants, only : pi
+    real(rk), intent(in) :: length
+    integer(ik), intent(in) :: nx
+    real(rk), intent(out) :: dx(:) ! (nx)
+
+    integer(ik) :: i
+    real(rk) :: aequal
+    real(rk) :: rprev, rthis
+
+    aequal = pi * length**2 / nx
+
+    rprev = 0.0_rk
+    do i = 1,nx
+      rthis = sqrt(aequal / pi + rprev**2)
+      dx(i) = rthis - rprev
+      rprev = rthis
+    enddo
+  endsubroutine geometry_area_mesh
+
+  subroutine geometry_volume_mesh(length, nx, dx)
+    use constants, only : pi
+    real(rk), intent(in) :: length
+    integer(ik), intent(in) :: nx
+    real(rk), intent(out) :: dx(:) ! (nx)
+
+    integer(ik) :: i
+    real(rk) :: vequal
+    real(rk) :: rprev, rthis
+
+    vequal = 4.0_rk * pi * length**3 / 3.0_rk
+
+    rprev = 0.0_rk
+    do i = 1,nx
+      rthis = (0.75_rk / pi * vequal + rprev**3)**(1.0_rk/3.0_rk)
+    enddo ! i = 1,nx
+  endsubroutine geometry_volume_mesh
 
   subroutine geometry_refine(nx, xcenter, dx)
     integer(ik), intent(inout) :: nx
