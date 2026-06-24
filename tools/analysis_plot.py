@@ -17,8 +17,8 @@ if __name__ == "__main__":
     Texact = dat[:, 2]
 
     plt.figure()
-    plt.plot(x, T, "-o", label="Thermos")
-    plt.plot(x, Texact, "-o", label="Exact")
+    plt.plot(x, T, label="Thermos")
+    plt.plot(x, Texact, label="Exact")
     plt.legend()
     plt.xlabel("$x$ [cm]")
     plt.ylabel("$T(x)$ [K]")
