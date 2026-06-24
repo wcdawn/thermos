@@ -45,10 +45,10 @@ kind.o :
 input.o : kind.o fileio.o output.o finite_difference.o
 fileio.o :
 geometry.o : kind.o output.o constants.o
-output.o : fileio.o kind.o
+output.o : fileio.o kind.o conductivity_function.o source_function.o
 finite_difference.o : kind.o linalg.o output.o source_function.o conductivity_function.o
 linalg.o : kind.o
 constants.o : kind.o
-source_function.o : kind.o constants.o output.o
-conductivity_function.o : kind.o output.o
+source_function.o : kind.o constants.o
+conductivity_function.o : kind.o
 analysis.o : kind.o output.o linalg.o fileio.o
