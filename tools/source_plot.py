@@ -16,7 +16,7 @@ if __name__ == "__main__":
     q = dat[:, 1]
 
     plt.figure()
-    plt.plot(x, T)
+    plt.plot(x, q)
     plt.xlabel("$x$ [cm]")
     plt.ylabel("$q(x)$ [W/cm^3]")
     plt.title("Thermos Source")

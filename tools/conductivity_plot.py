@@ -16,7 +16,7 @@ if __name__ == "__main__":
     k = dat[:, 1]
 
     plt.figure()
-    plt.plot(x, T)
+    plt.plot(x, k)
     plt.xlabel("$x$ [cm]")
     plt.ylabel("$k(T(x))$ [W/cm/K]")
     plt.title("Thermos Thermal Conductivity")
