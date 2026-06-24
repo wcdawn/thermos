@@ -100,7 +100,6 @@ contains
     do i = 1,nx
       texact(i) = -q0/k0 * (x(i)**2/6.0_rk - x(i)**3/(12.0_rk*R)) &
         + TR + q0/k0 * R**2/12.0_rk
-      write(999, '(es13.6)') texact(i)
     enddo ! i = 1,nx
   endsubroutine temperature_exact_sph_lin
 
