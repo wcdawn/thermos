@@ -9,7 +9,7 @@ use input, only : input_parse, input_summary, &
   analysis_name
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write, &
-  output_temperature_csv
+  output_temperature_csv, output_conductivity_csv, output_source_csv
 use finite_difference, only : finite_difference_solve
 use source_function, only : source_function_init, source_function_cleanup
 use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup
@@ -17,7 +17,7 @@ use analysis, only : analysis_analyze
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, &
-  fname_temperature, fname_analysis
+  fname_temperature, fname_analysis, fname_conductivity, fname_source
 
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
@@ -36,6 +36,8 @@ fname_stub = fname_input(:i)
 fname_out = trim(adjustl(fname_stub)) // '.out'
 fname_temperature = trim(adjustl(fname_stub)) // '_temperature.csv'
 fname_analysis = trim(adjustl(fname_stub)) // '_analysis.csv'
+fname_conductivity = trim(adjustl(fname_stub)) // '_conductivity.csv'
+fname_source = trim(adjustl(fname_stub)) // '_source.csv'
 
 call output_open_file(fname_out)
 
@@ -82,6 +84,15 @@ endif
 call output_write('Writing temperautre output on: ' // &
   trim(adjustl(fname_temperature)))
 call output_temperature_csv(fname_temperature, nx, xcenter, temperature)
+
+call output_write('Writing thermal conductivity output on: ' // &
+  trim(adjustl(fname_conductivity)))
+call output_conductivity_csv(fname_conductivity, nx, xcenter, temperature)
+
+call output_write('Writing source output on: ' // &
+  trim(adjustl(fname_source)))
+call output_source_csv(fname_source, nx, xcenter)
+
 call output_write('')
 
 call output_write('End Thermos')
