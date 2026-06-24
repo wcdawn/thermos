@@ -328,16 +328,18 @@ contains
     real(rk), intent(out) :: src(:) ! (nx)
     
     integer(ik) :: i
-    real(rk) :: xthis
+    real(rk) :: x_plus_half, x_minus_half
 
     select case(bctype_left)
       case ('fixed')
-        xthis = xcenter(1)
-        src(1) = dx(1) * xthis * source_fun(xcenter(1)) &
-          + 2.0_rk * xthis * conductivity_fun(Tleft) / dx(1) * Tleft
+        x_plus_half = xcenter(1) + 0.5_rk * dx(1)
+        x_minus_half = 0.0_rk
+        src(1) = source_fun(xcenter(1)) * 0.5_rk * (x_plus_half**2 - x_minus_half**2) &
+          + 2.0_rk * xcenter(1) * conductivity_fun(Tleft) / dx(1) * Tleft ! TODO?
       case ('insulated')
-        xthis = xcenter(1)
-        src(1) = dx(1) * xthis * source_fun(xcenter(1))
+        x_plus_half = xcenter(1) + 0.5_rk * dx(1)
+        x_minus_half = 0.0_rk
+        src(1) = source_fun(xcenter(1)) * 0.5_rk * (x_plus_half**2 - x_minus_half**2)
       case default
         call output_write('ERROR: unknown value of bctype_left in build_source_cylindrical: ' &
           // trim(adjustl(bctype_left)))
@@ -345,18 +347,21 @@ contains
     endselect
 
     do i = 2,nx-1
-      xthis = xcenter(i)
-      src(i) = dx(i) * xthis * source_fun(xcenter(i))
+      x_plus_half = xcenter(i) + 0.5_rk * dx(i)
+      x_minus_half = xcenter(i) - 0.5_rk * dx(i)
+      src(i) = source_fun(xcenter(i)) * 0.5_rk * (x_plus_half**2 - x_minus_half**2)
     enddo ! i = 2,nx-1
 
     select case(bctype_right)
       case ('fixed')
-        xthis = xcenter(nx)
-        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx)) &
-          + 2.0_rk * xthis * conductivity_fun(Tright) / dx(nx) * Tright
+        x_plus_half = xcenter(nx) + 0.5_rk * dx(nx)
+        x_minus_half = xcenter(nx) - 0.5_rk * dx(nx)
+        src(nx) = source_fun(xcenter(nx)) * 0.5_rk * (x_plus_half**2 - x_minus_half**2) &
+          + 2.0_rk * xcenter(nx) * conductivity_fun(Tright) / dx(nx) * Tright ! TODO?
       case ('insulated')
-        xthis = xcenter(nx)
-        src(nx) = dx(nx) * xthis * source_fun(xcenter(nx))
+        x_plus_half = xcenter(nx) + 0.5_rk * dx(nx)
+        x_minus_half = xcenter(nx) - 0.5_rk * dx(nx)
+        src(nx) = source_fun(xcenter(nx)) * 0.5_rk * (x_plus_half**2 - x_minus_half**2)
       case default
         call output_write('ERROR: unknown value of bctype_right in build_source_cylindrical: ' &
           // trim(adjustl(bctype_right)))
