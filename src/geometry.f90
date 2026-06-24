@@ -22,7 +22,7 @@ contains
       case ('area')
         call geometry_area_mesh(length, nx, dx)
       case ('volume')
-        call geometry_uniform_mesh(length, nx, dx) ! TODO
+        call geometry_volume_mesh(length, nx, dx)
       case default
         call output_write('ERROR: unknown mesh spacing: ' // &
           trim(adjustl(mesh_spacing)))
@@ -69,11 +69,13 @@ contains
     real(rk) :: vequal
     real(rk) :: rprev, rthis
 
-    vequal = 4.0_rk * pi * length**3 / 3.0_rk
+    vequal = 4.0_rk * pi * length**3 / 3.0_rk / nx
 
     rprev = 0.0_rk
     do i = 1,nx
       rthis = (0.75_rk / pi * vequal + rprev**3)**(1.0_rk/3.0_rk)
+      dx(i) = rthis - rprev
+      rprev = rthis
     enddo ! i = 1,nx
   endsubroutine geometry_volume_mesh
 
