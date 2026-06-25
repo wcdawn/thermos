@@ -151,7 +151,7 @@ contains
     real(rk), parameter :: q0 = 2e3 ! [W/cc]
     real(rk), parameter :: k0 = 67.2_rk  ! [W/cm/K]
     real(rk), parameter :: beta = 0.1_rk ! [W/cm/K^2]
-    real(rk), parameter :: TR = 550.0_rk ! [K]
+    real(rk), parameter :: TR = 600.0_rk ! [K]
     real(rk), parameter :: R = 0.96_rk ! [cm]
 
     real(rk), parameter :: c2 = 0.5_rk * (k0**2 - (k0 - beta * TR)**2) / beta &
