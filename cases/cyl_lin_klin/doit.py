@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     executable = "../../src/thermos.x"
     fname_base = "cyl_lin_klin.inp"
-    max_refine = 10
+    max_refine = 15
 
     fname_run = fname_base.replace(".inp", "_run.inp")
 
