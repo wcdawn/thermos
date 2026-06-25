@@ -36,29 +36,31 @@ contains
     real(rk), intent(out) :: sup(:) ! (nx-1)
 
     integer(ik) :: i
-    real(rk) :: kprev, kthis, knext
+    real(rk) :: tprev, tnext
+    real(rk) :: kprev, knext
     real(rk) :: xprev, xnext
 
     ! BC at x=0, i=1
     select case (bctype_left)
       case ('fixed')
-        kthis = conductivity_fun(Tleft)
-        knext = conductivity_fun(temperature(2))
-        xnext = geo_xnext(xcenter(1), dx(1))
+        tprev = Tleft
+        tnext = (temperature(2)/dx(2) + temperature(1)/dx(1)) &
+          / (1.0_rk/dx(2) + 1.0_rk/dx(1))
+        kprev = conductivity_fun(tprev)
+        knext = conductivity_fun(tnext)
         xprev = geo_xprev(xcenter(1), dx(1))
-        dia(1) = -2.0_rk * xnext * kthis/dx(1) * knext/dx(2) &
-          / (kthis/dx(1) + knext/dx(2)) &
-          -2.0_rk * xprev *  kthis/dx(1)
-        sup(1) = 2.0_rk * xnext * kthis/dx(1) * knext/dx(2) &
-          / (kthis/dx(1) + xnext*knext/dx(2))
+        xnext = geo_xnext(xcenter(2), dx(2))
+        sup(1) = 2.0_rk * xnext * knext / dx(2) / dx(1) &
+          / (1.0_rk/dx(2) + 1.0_rk/dx(1))
+        dia(1) = -sup(1) - 2.0_rk * xprev * kprev / dx(1)
       case ('insulated')
-        kthis = conductivity_fun(temperature(1))
-        knext = conductivity_fun(temperature(2))
+        tnext = (temperature(2)/dx(2) + temperature(1)/dx(1)) &
+          / (1.0_rk/dx(2) + 1.0_rk/dx(1))
+        knext = conductivity_fun(tnext)
         xnext = geo_xnext(xcenter(1), dx(1))
-        dia(1) = -2.0_rk * xnext * kthis/dx(1) * knext/dx(2) &
-          / (kthis/dx(1) + knext/dx(2))
-        sup(1) = 2.0_rk * xnext * kthis/dx(1) * knext/dx(2) &
-          / (kthis/dx(1) + knext/dx(2))
+        sup(1) = 2.0_rk * xnext * knext / dx(2) / dx(1) &
+          / (1.0_rk/dx(2) + 1.0_rk/dx(1))
+        dia(1) = -sup(1)
       case default
         call output_write('ERROR: unknown value of bctype_left in build_matrix: ' &
           // trim(adjustl(bctype_left)))
@@ -67,43 +69,45 @@ contains
 
     do i = 2,nx-1
 
-      kprev = conductivity_fun(temperature(i-1))
-      kthis = conductivity_fun(temperature(i))
-      knext = conductivity_fun(temperature(i+1))
+      tprev = (temperature(i-1)/dx(i-1) + temperature(i)/dx(i)) &
+        / (1.0_rk/dx(i-1) + 1.0_rk/dx(i))
+      tnext = (temperature(i+1)/dx(i+1) + temperature(i)/dx(i)) &
+        / (1.0_rk/dx(i+1) + 1.0_rk/dx(i))
+
+      kprev = conductivity_fun(tprev)
+      knext = conductivity_fun(tnext)
 
       xprev = geo_xprev(xcenter(i), dx(i))
       xnext = geo_xnext(xcenter(i), dx(i))
 
-      sub(i-1) = 2.0_rk * xprev * kthis/dx(i) * kprev/dx(i-1) &
-        / (kthis/dx(i) + kprev/dx(i-1))
-      dia(i) = -2.0_rk* xprev * kthis/dx(i) * kprev/dx(i-1) &
-        / (kthis/dx(i) + kprev/dx(i-1)) &
-        - 2.0_rk * xnext * kthis/dx(i) * knext/dx(i+1) & 
-        / (kthis/dx(i) + knext/dx(i+1))
-      sup(i) = 2.0_rk * xnext * kthis/dx(i) * knext/dx(i+1) &
-        / (kthis/dx(i) + knext/dx(i+1))
+      sub(i-1) = 2.0_rk * xprev * kprev / dx(i-1) / dx(i) &
+        / (1.0_rk/dx(i-1) + 1.0_rk/dx(i))
+      sup(i) = 2.0_rk * xnext * knext / dx(i+1) / dx(i) &
+        / (1.0_rk/dx(i+1) + 1.0_rk/dx(i))
+      dia(i) = -(sub(i-1) + sup(i))
 
     enddo ! i = 2,nx-1
 
     select case (bctype_right)
       case ('fixed')
-        kprev = conductivity_fun(temperature(nx-1))
-        kthis = conductivity_fun(temperature(nx))
-        xprev = geo_xprev(xcenter(nx), dx(nx))
+        tprev = (temperature(nx-1)/dx(nx-1) + temperature(nx)/dx(nx)) &
+          / (1.0_rk/dx(nx-1) + 1.0_rk/dx(nx))
+        tnext = Tright
+        kprev = conductivity_fun(tprev)
+        knext = conductivity_fun(tnext)
+        xprev = geo_xprev(xcenter(nx-1), dx(nx-1))
         xnext = geo_xnext(xcenter(nx), dx(nx))
-        sub(nx-1) = 2.0_rk * xprev * kthis/dx(nx) * kprev/dx(nx-1) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
-        dia(nx) = -2.0_rk * xprev * kthis/dx(nx) * kprev/dx(nx-1) &
-          / (kthis/dx(nx) + kprev/dx(nx-1)) &
-          -  2.0_rk*xnext*conductivity_fun(Tright)/dx(nx)
+        sub(nx-1) = 2.0_rk * xprev * kprev / dx(nx-1) / dx(nx) &
+          / (1.0_rk/dx(nx-1) + 1.0_rk/dx(nx))
+        dia(nx) = -sub(nx-1) - 2.0_rk * xnext * knext / dx(nx)
       case ('insulated')
-        kprev = conductivity_fun(temperature(nx-1))
-        kthis = conductivity_fun(temperature(nx))
+        tprev = (temperature(nx-1)/dx(nx-1) + temperature(nx)/dx(nx)) &
+          / (1.0_rk/dx(nx-1) + 1.0_rk/dx(nx))
+        kprev = conductivity_fun(tprev)
         xprev = geo_xprev(xcenter(nx), dx(nx))
-        sub(nx-1) = 2.0_rk * xprev * kthis/dx(nx) * kprev/dx(nx-1) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
-        dia(nx) = -2.0_rk * xprev * kthis/dx(nx) * kprev/dx(nx-1) &
-          / (kthis/dx(nx) + kprev/dx(nx-1))
+        sub(nx-1) = 2.0_rk * xprev * kprev / dx(nx-1) / dx(nx) &
+          / (1.0_rk/dx(nx-1) + 1.0_rk/dx(nx))
+        dia(nx) = -sub(nx-1)
       case default
         call output_write('ERROR: unknown value of bctype_right in build_matrix: ' &
           // trim(adjustl(bctype_right)))
