@@ -215,7 +215,7 @@ contains
 
     do i = 1,nx
       texact(i) = &
-        -alpha/beta + c2 * exp(c1 * x(i)) * exp(q0 * beta * (L / pi)**2 * sin(pi * x(i) / L))
+        -alpha/beta + c2 * exp(c1 * x(i) + q0 * beta * (L / pi)**2 * sin(pi * x(i) / L))
     enddo ! i = 1,nx
   endsubroutine temperature_exact_slab_sin_krat
 
