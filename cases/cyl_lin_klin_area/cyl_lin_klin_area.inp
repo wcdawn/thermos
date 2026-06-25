@@ -1,0 +1,20 @@
+geometry cylindrical
+length 0.96
+nx 10
+refine 3
+mesh_spacing area
+
+bctype_left insulated
+bctype_right fixed
+bcval_right 600.
+
+conductivity_function linear
+conductivity_coeff 67.2 0.1 /
+source_function linear
+source_coeff 2e3 0.96 /
+
+max_iter 100
+tol_temperature 1e-20
+init_temperature 600.
+
+analysis_name cyl_lin_klin
