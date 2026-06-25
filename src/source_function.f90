@@ -30,6 +30,8 @@ contains
     select case (source_name)
       case ('cos')
         source_fun => source_fun_cos
+      case ('sin')
+        source_fun => source_fun_sin
       case ('linear')
         source_fun => source_fun_linear
       case default
@@ -47,6 +49,15 @@ contains
     L  = coeff(2)
     source_fun_cos = q0 * cos(pi * x * 0.5_rk / L)
   endfunction source_fun_cos
+
+  pure real(rk) function source_fun_sin(x)
+    use constants, only : pi
+    real(rk), intent(in) :: x ! [cm] position
+    real(rk) :: q0, L
+    q0 = coeff(1)
+    L  = coeff(2)
+    source_fun_sin = q0 * sin(pi * x / L)
+  endfunction source_fun_sin
 
   pure real(rk) function source_fun_linear(x)
     real(rk), intent(in) :: x ! [cm] position

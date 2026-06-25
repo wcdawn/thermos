@@ -20,12 +20,12 @@ character(16) :: bctype_right= 'fixed' ! ('fixed', 'insulated')
 real(rk) :: bcval_left = 600.0_rk
 real(rk) :: bcval_right = 300.0_rk
 
-character(16) :: source_function_name = 'cos'
+character(16) :: source_function_name = 'cos' ! ('cos', 'sin', 'linear')
 real(rk) :: source_coeff(4) = [ 20.0, 10.0, 0.0, 0.0 ]
-character(16) :: conductivity_function_name = 'constant'
+character(16) :: conductivity_function_name = 'constant' ! ('constant', 'linear', 'rational')
 real(rk) :: conductivity_coeff(4) = [ 1.2, 0.0, 0.0, 0.0 ]
 
-character(16) :: mesh_spacing = 'uniform'
+character(16) :: mesh_spacing = 'uniform' ! ('uniform', 'area', 'volume')
 
 character(16) :: analysis_name = 'none'
 

@@ -1,0 +1,19 @@
+geometry cartesian
+length 5.
+nx 1024
+refine 0
+
+bctype_left fixed
+bctype_right fixed
+bcval_left 600.
+bcval_right 300.
+
+conductivity_function rational
+conductivity_coeff 1e-3 5e-4 /
+source_function sin
+source_coeff 500.0 5.0 /
+
+max_iter 1000
+tol_temperature 1e-20
+
+analysis_name slab_sin_krat
