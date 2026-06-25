@@ -34,6 +34,8 @@ contains
         call temperature_exact_slab_cos_klin(nx, xcenter, texact)
       case ('cyl_lin_klin')
         call temperature_exact_cyl_lin_klin(nx, xcenter, texact)
+      case ('sph_lin_klin')
+        call temperature_exact_sph_lin_klin(nx, xcenter, texact)
       case default
         call output_write('ERROR: unknown analysis name: ' // &
           trim(adjustl(analysis_name)))
@@ -163,6 +165,31 @@ contains
         - 0.25_rk * x(i)**2) + c2))) / beta
     enddo ! i = 1,nx
   endsubroutine temperature_exact_cyl_lin_klin
+
+  subroutine temperature_exact_sph_lin_klin(nx, x, texact)
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: x(:) ! (nx)
+    real(rk), intent(out) :: texact(:) ! (nx)
+
+    integer(ik) :: i
+
+    ! Based on the Kirchoff transform.
+    ! TODO Try to be more clever about these
+    real(rk), parameter :: q0 = 2e2 ! [W/cc]
+    real(rk), parameter :: k0 = 1.692145_rk  ! [W/cm/K]
+    real(rk), parameter :: beta = 0.0012489_rk ! [W/cm/K^2]
+    real(rk), parameter :: TR = 600.0_rk ! [K]
+    real(rk), parameter :: R = 3.5_rk ! [cm]
+
+    real(rk), parameter :: c2 = 0.5_rk * (k0**2 - (k0 - beta * TR)**2) / beta &
+      + q0 * R**2 / 12.0_rk
+
+    do i = 1,nx
+      texact(i) = &
+        (k0 - sqrt(k0**2 - 2.0_rk * beta * (q0 * (x(i)**3/(12.0_rk * R) &
+        - x(i)**2/6.0_rk) + c2))) / beta
+    enddo ! i = 1,nx
+  endsubroutine temperature_exact_sph_lin_klin
 
   subroutine analysis_output(fname, nx, xc, t, texact)
     use fileio, only : fileio_open_write

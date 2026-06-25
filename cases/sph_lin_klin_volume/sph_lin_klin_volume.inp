@@ -1,0 +1,20 @@
+geometry spherical
+length 3.5
+nx 10
+refine 3
+mesh_spacing volume
+
+bctype_left insulated
+bctype_right fixed
+bcval_right 600.
+
+conductivity_function linear
+conductivity_coeff 1.692145 0.0012489 /
+source_function linear
+source_coeff 2e2 3.5 /
+
+max_iter 100
+tol_temperature 1e-20
+init_temperature 600.
+
+analysis_name sph_lin_klin
