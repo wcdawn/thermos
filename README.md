@@ -11,7 +11,7 @@ Numerical methods available:
 - Finite Difference Method (FDM)
 - Finite Element Method (FEM) (coming soon)
 
-General non-linear heat conduction is supported of the form $k(T)$.
+General non-linear heat conduction is supported of the form $k(T)$. A Picard iteration is used to resolve any non-linearity of the problem.
 
 # Usage
 
