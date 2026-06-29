@@ -1,10 +1,11 @@
 module conductivity_function
-use kind, only : rk
+use kind, only : ik, rk
 implicit none
 
 private
 
-public :: conductivity_function_init, conductivity_function_cleanup
+public :: conductivity_function_init, conductivity_function_cleanup, &
+  conductivity_output_csv
 
 abstract interface
   pure function k(T)
@@ -21,6 +22,7 @@ real(rk), allocatable :: coeff(:)
 contains
 
   subroutine conductivity_function_init(conductivity_name, coeff_in)
+    use exception_handler, only : exception_fatal
     character(*), intent(in) :: conductivity_name
     real(rk), intent(in) :: coeff_in(:)
 
@@ -35,9 +37,8 @@ contains
       case ('rational')
         conductivity_fun => conductivity_fun_rational
       case default
-        write(*,*) 'ERROR: Unknown name of conductivity function: ' &
-          // trim(adjustl(conductivity_name))
-        stop
+        call exception_fatal('Unknown name of conductivity function: ' &
+          // trim(adjustl(conductivity_name)))
     endselect
   endsubroutine conductivity_function_init
 
@@ -67,5 +68,25 @@ contains
   subroutine conductivity_function_cleanup()
     deallocate(coeff)
   endsubroutine conductivity_function_cleanup
+
+  subroutine conductivity_output_csv(fname, nx, xcenter, temperature)
+    use fileio, only : fileio_open_write
+    character(*), intent(in) :: fname
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+    real(rk), intent(in) :: temperature(:) ! (nx)
+
+    integer, parameter :: iout = 11
+
+    integer(ik) :: i
+
+    call fileio_open_write(fname, iout)
+    write(iout, '(a)') 'xcenter [cm] , conductivity [W/cm/K]'
+    do i = 1,nx
+      write(iout, '(es23.16," , ",es23.6)') &
+        xcenter(i), conductivity_fun(temperature(i))
+    enddo ! i = 1,nx
+    close(iout)
+  endsubroutine conductivity_output_csv
 
 endmodule conductivity_function

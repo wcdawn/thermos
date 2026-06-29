@@ -24,7 +24,7 @@ contains
   subroutine finite_difference_build_matrix(nx, xcenter, dx, temperature, &
       bctype_left, bctype_right, Tleft, Tright, sub, dia, sup)
     use conductivity_function, only : conductivity_fun
-    use output, only : output_write
+    use exception_handler, only : exception_fatal
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
@@ -62,9 +62,8 @@ contains
           / (1.0_rk/dx(2) + 1.0_rk/dx(1))
         dia(1) = -sup(1)
       case default
-        call output_write('ERROR: unknown value of bctype_left in build_matrix: ' &
+        call exception_fatal('unknown value of bctype_left in build_matrix: ' &
           // trim(adjustl(bctype_left)))
-        stop
     endselect
 
     do i = 2,nx-1
@@ -109,9 +108,8 @@ contains
           / (1.0_rk/dx(nx-1) + 1.0_rk/dx(nx))
         dia(nx) = -sub(nx-1)
       case default
-        call output_write('ERROR: unknown value of bctype_right in build_matrix: ' &
+        call exception_fatal('unknown value of bctype_right in build_matrix: ' &
           // trim(adjustl(bctype_right)))
-        stop
     endselect
   endsubroutine finite_difference_build_matrix
 
@@ -119,7 +117,7 @@ contains
       bctype_left, bctype_right, Tleft, Tright, src)
     use source_function, only : source_fun
     use conductivity_function, only : conductivity_fun
-    use output, only : output_write
+    use exception_handler, only : exception_fatal
     integer(ik), intent(in) :: nx
     real(rk), intent(in) :: xcenter(:) ! (nx)
     real(rk), intent(in) :: dx(:) ! (nx)
@@ -139,9 +137,8 @@ contains
         xprev = geo_xprev(xcenter(1), dx(1))
         src(1) = source_fun(xcenter(1)) * geo_xsrc(xcenter(1), dx(1))
       case default
-        call output_write('ERROR: unknown value of bctype_left in build_source: ' &
+        call exception_fatal('unknown value of bctype_left in build_source: ' &
           // trim(adjustl(bctype_left)))
-        stop
     endselect
 
     do i = 2,nx-1
@@ -156,9 +153,8 @@ contains
       case ('insulated')
         src(nx) = source_fun(xcenter(nx)) * geo_xsrc(xcenter(nx), dx(nx))
       case default
-        call output_write('ERROR: unknown value of bctype_right in build_source: ' &
+        call exception_fatal('ERROR: unknown value of bctype_right in build_source: ' &
           // trim(adjustl(bctype_right)))
-        stop
     endselect
     src = -src
   endsubroutine finite_difference_build_source
@@ -239,7 +235,7 @@ contains
   endsubroutine finite_difference_solve
 
   subroutine finite_difference_init_geometry(geometry)
-    use output, only : output_write
+    use exception_handler, only : exception_fatal
     character(*), intent(in) :: geometry
     select case (geometry)
       case ('cartesian')
@@ -255,9 +251,8 @@ contains
         geo_xprev => geo_xprev_spherical
         geo_xsrc => geo_xsrc_spherical
       case default
-        call output_write('ERROR: Unknown geometry in FD init_geometry: ' // &
+        call exception_fatal('Unknown geometry in FD init_geometry: ' // &
           trim(adjustl(geometry)))
-        stop
     endselect
   endsubroutine finite_difference_init_geometry
 

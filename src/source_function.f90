@@ -1,10 +1,11 @@
 module source_function
-use kind, only : rk
+use kind, only : ik, rk
 implicit none
 
 private
 
-public :: source_function_init, source_function_cleanup
+public :: source_function_init, source_function_cleanup, &
+  source_output_csv
 
 abstract interface
   pure function q(x)
@@ -21,6 +22,7 @@ real(rk), allocatable :: coeff(:)
 contains
 
   subroutine source_function_init(source_name, coeff_in)
+    use exception_handler, only : exception_fatal
     character(*), intent(in) :: source_name
     real(rk), intent(in) :: coeff_in(:)
 
@@ -35,9 +37,8 @@ contains
       case ('linear')
         source_fun => source_fun_linear
       case default
-        write(*,*) 'ERROR: Unknown name of source function: ' &
-          // trim(adjustl(source_name))
-        stop
+        call exception_fatal('Unknown name of source function: ' &
+          // trim(adjustl(source_name)))
     endselect
   endsubroutine source_function_init
 
@@ -70,5 +71,24 @@ contains
   subroutine source_function_cleanup()
     deallocate(coeff)
   endsubroutine source_function_cleanup
+
+  subroutine source_output_csv(fname, nx, xcenter)
+    use fileio, only : fileio_open_write
+    character(*), intent(in) :: fname
+    integer(ik), intent(in) :: nx
+    real(rk), intent(in) :: xcenter(:) ! (nx)
+
+    integer, parameter :: iout = 11
+
+    integer(ik) :: i
+
+    call fileio_open_write(fname, iout)
+    write(iout, '(a)') 'xcenter [cm] , source [W/cm^3]'
+    do i = 1,nx
+      write(iout, '(es23.16," , ",es23.6)') &
+        xcenter(i), source_fun(xcenter(i))
+    enddo ! i = 1,nx
+    close(iout)
+  endsubroutine source_output_csv
 
 endmodule source_function

@@ -8,7 +8,7 @@ implicit none
 private
 
 public :: output_open_file, output_close_file, output_write, &
-  output_temperature_csv, output_conductivity_csv, output_source_csv
+  output_temperature_csv
 
 integer, parameter, private :: output_file_unit = 99
 integer, parameter, private :: output_list(2) = [ stdout, output_file_unit ]
@@ -51,46 +51,5 @@ contains
     enddo ! i = 1,nx
     close(iout)
   endsubroutine output_temperature_csv
-
-  subroutine output_conductivity_csv(fname, nx, xcenter, temperature)
-    use fileio, only : fileio_open_write
-    use conductivity_function, only : conductivity_fun
-    character(*), intent(in) :: fname
-    integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: xcenter(:) ! (nx)
-    real(rk), intent(in) :: temperature(:) ! (nx)
-
-    integer, parameter :: iout = 11
-
-    integer(ik) :: i
-
-    call fileio_open_write(fname, iout)
-    write(iout, '(a)') 'xcenter [cm] , conductivity [W/cm/K]'
-    do i = 1,nx
-      write(iout, '(es23.16," , ",es23.6)') &
-        xcenter(i), conductivity_fun(temperature(i))
-    enddo ! i = 1,nx
-    close(iout)
-  endsubroutine output_conductivity_csv
-
-  subroutine output_source_csv(fname, nx, xcenter)
-    use fileio, only : fileio_open_write
-    use source_function, only : source_fun
-    character(*), intent(in) :: fname
-    integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: xcenter(:) ! (nx)
-
-    integer, parameter :: iout = 11
-
-    integer(ik) :: i
-
-    call fileio_open_write(fname, iout)
-    write(iout, '(a)') 'xcenter [cm] , source [W/cm^3]'
-    do i = 1,nx
-      write(iout, '(es23.16," , ",es23.6)') &
-        xcenter(i), source_fun(xcenter(i))
-    enddo ! i = 1,nx
-    close(iout)
-  endsubroutine output_source_csv
 
 endmodule output

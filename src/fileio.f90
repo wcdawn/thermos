@@ -45,7 +45,7 @@ contains
     write(line, '(a,a,a,i0,a,i0)') &
       "ERROR: failed to interact with file: '", trim(adjustl(fname)), &
       "' on unit=", iounit, '. Recieved iostat=', iostat
-    write(*,*) trim(adjustl(line))
+    write(*, line)
     stop
   endsubroutine fileio_error
 

@@ -9,11 +9,14 @@ use input, only : input_parse, input_summary, &
   analysis_name
 use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_summary
 use output, only : output_open_file, output_close_file, output_write, &
-  output_temperature_csv, output_conductivity_csv, output_source_csv
+  output_temperature_csv
 use finite_difference, only : finite_difference_solve
-use source_function, only : source_function_init, source_function_cleanup
-use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup
+use source_function, only : source_function_init, source_function_cleanup, &
+  source_output_csv
+use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup, &
+  conductivity_output_csv
 use analysis, only : analysis_analyze
+use exception_handler, only : exception_fatal, exception_summary
 implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, &
@@ -73,8 +76,7 @@ select case (solver)
       bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature)
   case default
-    call output_write('ERROR: unknown solver selection: ' // trim(adjustl(solver)))
-    stop
+    call exception_fatal('unknown solver selection: ' // trim(adjustl(solver)))
 endselect
 
 if (analysis_name /= 'none') then
@@ -87,14 +89,17 @@ call output_temperature_csv(fname_temperature, nx, xcenter, temperature)
 
 call output_write('Writing thermal conductivity output on: ' // &
   trim(adjustl(fname_conductivity)))
-call output_conductivity_csv(fname_conductivity, nx, xcenter, temperature)
+call conductivity_output_csv(fname_conductivity, nx, xcenter, temperature)
 
 call output_write('Writing source output on: ' // &
   trim(adjustl(fname_source)))
-call output_source_csv(fname_source, nx, xcenter)
+call source_output_csv(fname_source, nx, xcenter)
 
 call output_write('')
 
+call exception_summary()
+
+call output_write('Normal Termination :)')
 call output_write('End Thermos')
 
 call source_function_cleanup()

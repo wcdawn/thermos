@@ -8,6 +8,7 @@ target_sources(${PROJECT_NAME}.x
     src/analysis.f90
     src/conductivity_function.f90
     src/constants.f90
+    src/exception_handler.f90
     src/fileio.f90
     src/finite_difference.f90
     src/geometry.f90

@@ -10,6 +10,7 @@ contains
 
   subroutine analysis_analyze(analysis_name, fname_out, nx, xcenter, temperature)
     use output, only : output_write
+    use exception_handler, only : exception_fatal
     use linalg, only : norm
     character(*), intent(in) :: analysis_name
     character(*), intent(in) :: fname_out
@@ -39,9 +40,8 @@ contains
       case ('slab_sin_krat')
         call temperature_exact_slab_sin_krat(nx, xcenter, texact)
       case default
-        call output_write('ERROR: unknown analysis name: ' // &
+        call exception_fatal('unknown analysis name: ' // &
           trim(adjustl(analysis_name)))
-        stop
     endselect
 
     call output_write('=== ANALYSIS SUMMARY ===')

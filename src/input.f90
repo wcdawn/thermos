@@ -46,10 +46,11 @@ contains
 
   subroutine input_parse(fname)
     use fileio, only : fileio_open_read
+    use exception_handler, only : exception_fatal
     character(*), intent(in) :: fname
     integer, parameter :: iunit = 11
     integer :: ios
-    character(1024) :: line, card
+    character(1024) :: line, card, msg
 
     call fileio_open_read(fname, iunit)
 
@@ -111,9 +112,9 @@ contains
         case ('analysis_name')
           read(iunit, *) card, analysis_name
         case default
-          write(*, '(a,a)') 'ERROR: Unknown input card. Troublesome line follows.'
-          write(*, '(a)') trim(adjustl(line))
-          stop
+          write(msg, '(a)') 'Unknown input card. ' &
+            // 'Troublesome line follows.' // new_line('a') // trim(adjustl(line))
+          call exception_fatal(msg)
       endselect
     enddo
 

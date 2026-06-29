@@ -9,7 +9,7 @@ public :: geometry_calculate_coordinates, geometry_refine, geometry_summary
 contains
 
   subroutine geometry_calculate_coordinates(mesh_spacing, length, nx, xcenter, dx)
-    use output, only : output_write
+    use exception_handler, only : exception_fatal
     character(*), intent(in) :: mesh_spacing
     real(rk), intent(in) :: length
     integer(ik), intent(in) :: nx
@@ -24,9 +24,8 @@ contains
       case ('volume')
         call geometry_volume_mesh(length, nx, dx)
       case default
-        call output_write('ERROR: unknown mesh spacing: ' // &
+        call exception_fatal('ERROR: unknown mesh spacing: ' // &
           trim(adjustl(mesh_spacing)))
-        stop
     endselect
 
     call geometry_dx2xcenter(nx, dx, xcenter)
