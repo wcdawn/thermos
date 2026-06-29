@@ -161,7 +161,7 @@ contains
 
   subroutine finite_difference_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
-      max_iter, tol_temperature, init_temperature, temperature)
+      max_iter, tol_temperature, init_temperature, temperature, TCL)
     use linalg, only : trid, norm
     use output, only : output_write
     character(*), intent(in) :: geometry
@@ -175,7 +175,8 @@ contains
     integer(ik), intent(in) :: max_iter
     real(rk), intent(in) :: tol_temperature ! [K]
     real(rk), intent(in) :: init_temperature ! [K]
-    real(rk), intent(out) :: temperature(:) ! (nx)
+    real(rk), intent(out) :: temperature(:) ! (nx) [K]
+    real(rk), intent(out) :: TCL ! [K] centerline temperature
 
     real(rk), allocatable :: sub(:) ! (nx-1)
     real(rk), allocatable :: dia(:) ! (nx)
@@ -226,6 +227,13 @@ contains
       endif
 
     enddo ! iter = 1,max_iter
+
+    if ((geometry == 'cylindrical') .or. (geometry == 'spherical')) then
+      TCL = temperature(1) &
+        + 2.0_rk * dx(1) / (dx(1) + dx(2)) * (temperature(1) - temperature(2))
+    else
+      TCL = -1.0_rk
+    endif
 
     call output_write('')
 
