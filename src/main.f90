@@ -25,6 +25,7 @@ character(1024) :: fname_input, fname_stub, fname_out, &
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
 real(rk), allocatable :: temperature(:)
+real(rk) :: TCL
 
 if (command_argument_count() == 0) then
   stop 'missing input filename'
@@ -74,13 +75,13 @@ select case (solver)
   case ('finite_difference')
     call finite_difference_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
-      max_iter, tol_temperature, init_temperature, temperature)
+      max_iter, tol_temperature, init_temperature, temperature, TCL)
   case default
     call exception_fatal('unknown solver selection: ' // trim(adjustl(solver)))
 endselect
 
 if (analysis_name /= 'none') then
-  call analysis_analyze(analysis_name, fname_analysis, nx, xcenter, temperature)
+  call analysis_analyze(analysis_name, fname_analysis, nx, xcenter, temperature, TCL)
 endif
 
 call output_write('Writing temperautre output on: ' // &

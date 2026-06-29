@@ -31,6 +31,13 @@ def get_linf(lines):
             line = line.split()
             return float(line[3])
 
+def get_tclerr(lines):
+    for line in lines:
+        if "TCL error" in line:
+            line = line.split()
+            return float(line[3])
+
+
 
 def get_nx(lines):
     ready = False
@@ -47,7 +54,7 @@ def get_nx(lines):
 
 if __name__ == "__main__":
 
-    executable = "../../src/thermos.x"
+    executable = "../../build/thermos.x"
     fname_base = "cyl_lin_klin.inp"
     max_refine = 15
 
@@ -56,6 +63,7 @@ if __name__ == "__main__":
     runtxt = open(fname_base, "r").readlines()
 
     linferr = np.zeros(max_refine)
+    tclerr = np.zeros(max_refine)
     nx = np.zeros(max_refine, dtype=int)
 
     for r in range(max_refine):
@@ -69,18 +77,21 @@ if __name__ == "__main__":
         out = out.split("\n")
 
         linferr[r] = get_linf(out)
+        tclerr[r] = get_tclerr(out)
         nx[r] = get_nx(out)
 
-        print("r=", r, "linf= {:.2e}".format(linferr[r]))
+        print("r=", r, "linf= {:.2e}".format(linferr[r]), "tclerr={:.2e}".format(tclerr[r]))
 
     with open("result.csv", "w") as f:
-        f.write("refine , linferr [K]\n")
+        f.write("refine , linferr [K] , tclerr [K]\n")
         for ridx in range(max_refine):
-            f.write("r{:d} , {:.2e}\n".format(ridx, linferr[ridx]))
+            f.write("r{:d} , {:.2e} , {:.2e}\n".format(ridx, linferr[ridx], tclerr[ridx]))
 
     plt.figure()
-    plt.loglog(nx, np.abs(linferr), "-o")
+    plt.loglog(nx, np.abs(linferr), "-o", label="$\\| e \\|_\\infty$")
+    plt.loglog(nx, np.abs(tclerr), "-o", label="TCL")
     plt.loglog(nx, np.abs(linferr[0]) / nx[0] / nx**2, "-k", lw=1, label="_hide")
+    plt.legend()
     plt.xlabel("NX")
     plt.ylabel("$L_\\infty$ error [K]")
     plt.title("Spatial Refinement")

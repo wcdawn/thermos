@@ -8,35 +8,40 @@ public :: analysis_analyze
 
 contains
 
-  subroutine analysis_analyze(analysis_name, fname_out, nx, xcenter, temperature)
+  subroutine analysis_analyze(analysis_name, fname_out, nx, xcenter, &
+    temperature, TCL)
     use output, only : output_write
     use exception_handler, only : exception_fatal
     use linalg, only : norm
     character(*), intent(in) :: analysis_name
     character(*), intent(in) :: fname_out
     integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: xcenter(:) ! (nx)
-    real(rk), intent(in) :: temperature(:) ! (nx)
+    real(rk), intent(in) :: xcenter(:) ! (nx) [cm]
+    real(rk), intent(in) :: temperature(:) ! (nx) [K]
+    real(rk), intent(in) :: TCL ! [K] centerline temperature
 
     character(1024) :: line
 
     real(rk), allocatable :: texact(:) ! (nx)
+    real(rk) :: TCLexact
+
 
     allocate(texact(nx))
+    TCLexact = -1.0_rk
 
     select case (analysis_name)
       case ('slab_cos')
         call temperature_exact_slab_cos(nx, xcenter, texact)
       case ('cyl_lin')
-        call temperature_exact_cyl_lin(nx, xcenter, texact)
+        call temperature_exact_cyl_lin(nx, xcenter, texact, TCLexact)
       case ('sph_lin')
-        call temperature_exact_sph_lin(nx, xcenter, texact)
+        call temperature_exact_sph_lin(nx, xcenter, texact, TCLexact)
       case ('slab_cos_klin')
         call temperature_exact_slab_cos_klin(nx, xcenter, texact)
       case ('cyl_lin_klin')
-        call temperature_exact_cyl_lin_klin(nx, xcenter, texact)
+        call temperature_exact_cyl_lin_klin(nx, xcenter, texact, TCLexact)
       case ('sph_lin_klin')
-        call temperature_exact_sph_lin_klin(nx, xcenter, texact)
+        call temperature_exact_sph_lin_klin(nx, xcenter, texact, TCLexact)
       case ('slab_sin_krat')
         call temperature_exact_slab_sin_krat(nx, xcenter, texact)
       case default
@@ -45,8 +50,12 @@ contains
     endselect
 
     call output_write('=== ANALYSIS SUMMARY ===')
-    write(line, '(a,es9.2)') 'Linf error = ', norm(-1, temperature - texact)
+    write(line, '(a,es9.2," [K]")') 'Linf error = ', norm(-1, temperature - texact)
     call output_write(line)
+    if ((TCL > 0.0_rk) .and.(TCLexact > 0.0_rk)) then
+      write(line, '(a,es9.2," [K]")') 'TCL error = ', TCL - TCLexact
+      call output_write(line)
+    endif
     call output_write('Writing analysis output on: ' // trim(adjustl(fname_out)))
     call analysis_output(fname_out, nx, xcenter, temperature, texact)
     call output_write('')
@@ -76,10 +85,11 @@ contains
     enddo ! i = 1,nx
   endsubroutine temperature_exact_slab_cos
 
-  subroutine temperature_exact_cyl_lin(nx, x, texact)
+  subroutine temperature_exact_cyl_lin(nx, x, texact, TCLexact)
     integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: x(:) ! (nx)
-    real(rk), intent(out) :: texact(:) ! (nx)
+    real(rk), intent(in) :: x(:) ! (nx) [cm]
+    real(rk), intent(out) :: texact(:) ! (nx) [K]
+    real(rk), intent(out) :: TCLexact ! [K] centerline temperature
 
     integer(ik) :: i
 
@@ -93,12 +103,14 @@ contains
       texact(i) = -q0/k0 * (x(i)**2*0.25_rk - x(i)**3/(9.0_rk*R)) &
         + TR + q0/k0 * 5.0_rk/36.0_rk * R**2
     enddo ! i = 1,nx
+    TCLexact = TR + q0/k0 * 5.0_rk/36.0_rk * R**2
   endsubroutine temperature_exact_cyl_lin
 
-  subroutine temperature_exact_sph_lin(nx, x, texact)
+  subroutine temperature_exact_sph_lin(nx, x, texact, TCLexact)
     integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: x(:) ! (nx)
-    real(rk), intent(out) :: texact(:) ! (nx)
+    real(rk), intent(in) :: x(:) ! (nx) [cm]
+    real(rk), intent(out) :: texact(:) ! (nx) [K]
+    real(rk), intent(out) :: TCLexact ! [K]
 
     integer(ik) :: i
 
@@ -112,6 +124,7 @@ contains
       texact(i) = -q0/k0 * (x(i)**2/6.0_rk - x(i)**3/(12.0_rk*R)) &
         + TR + q0/k0 * R**2/12.0_rk
     enddo ! i = 1,nx
+    TCLexact = TR + q0/k0 * R**2/12.0_rk
   endsubroutine temperature_exact_sph_lin
 
   subroutine temperature_exact_slab_cos_klin(nx, x, texact)
@@ -143,10 +156,11 @@ contains
     enddo ! i = 1,nx
   endsubroutine temperature_exact_slab_cos_klin
 
-  subroutine temperature_exact_cyl_lin_klin(nx, x, texact)
+  subroutine temperature_exact_cyl_lin_klin(nx, x, texact, TCLexact)
     integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: x(:) ! (nx)
-    real(rk), intent(out) :: texact(:) ! (nx)
+    real(rk), intent(in) :: x(:) ! (nx) [cm]
+    real(rk), intent(out) :: texact(:) ! (nx) [K]
+    real(rk), intent(out) :: TCLexact ! [K]
 
     integer(ik) :: i
 
@@ -166,12 +180,15 @@ contains
         (k0 - sqrt(k0**2 - 2.0_rk * beta * (q0 * (x(i)**3/(9.0_rk * R) &
         - 0.25_rk * x(i)**2) + c2))) / beta
     enddo ! i = 1,nx
+    TCLexact = &
+      (k0 - sqrt((k0 - beta * TR)**2 - 5.0_rk/18.0_rk * beta * q0 * R**2)) / beta
   endsubroutine temperature_exact_cyl_lin_klin
 
-  subroutine temperature_exact_sph_lin_klin(nx, x, texact)
+  subroutine temperature_exact_sph_lin_klin(nx, x, texact, TCLexact)
     integer(ik), intent(in) :: nx
-    real(rk), intent(in) :: x(:) ! (nx)
-    real(rk), intent(out) :: texact(:) ! (nx)
+    real(rk), intent(in) :: x(:) ! (nx) [cm]
+    real(rk), intent(out) :: texact(:) ! (nx) [K]
+    real(rk), intent(out) :: TCLexact ! [K]
 
     integer(ik) :: i
 
@@ -191,6 +208,7 @@ contains
         (k0 - sqrt(k0**2 - 2.0_rk * beta * (q0 * (x(i)**3/(12.0_rk * R) &
         - x(i)**2/6.0_rk) + c2))) / beta
     enddo ! i = 1,nx
+    TCLexact = (k0 - sqrt((k0 - beta * TR)**2 - R**2/12.0_rk * beta * q0)) / beta
   endsubroutine temperature_exact_sph_lin_klin
 
   subroutine temperature_exact_slab_sin_krat(nx, x, texact)
