@@ -187,6 +187,8 @@ contains
     integer(ik) :: iter
     real(rk) :: conv
 
+    real(rk) :: TCL
+
     character(1024) :: line
 
     allocate(sub(nx-1))
@@ -227,6 +229,12 @@ contains
 
     enddo ! iter = 1,max_iter
 
+    if ((geometry == 'cylindrical') .or. (geometry == 'spherical')) then
+      TCL = temperature(1) &
+        + 2.0_rk * dx(1) / (dx(1) + dx(2)) * (temperature(1) - temperature(2))
+      write(line, '(a,es13.6,a)') 'Tcenterline = ', TCL, ' [K]'
+      call output_write(line)
+    endif
     call output_write('')
 
     deallocate(temperature_old)
