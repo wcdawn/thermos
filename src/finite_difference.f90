@@ -231,8 +231,6 @@ contains
     if ((geometry == 'cylindrical') .or. (geometry == 'spherical')) then
       TCL = temperature(1) &
         + 2.0_rk * dx(1) / (dx(1) + dx(2)) * (temperature(1) - temperature(2))
-      write(line, '(a,es13.6,a)') 'Tcenterline = ', TCL, ' [K]'
-      call output_write(line)
     else
       TCL = -1.0_rk
     endif

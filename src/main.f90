@@ -21,6 +21,7 @@ implicit none
 
 character(1024) :: fname_input, fname_stub, fname_out, &
   fname_temperature, fname_analysis, fname_conductivity, fname_source
+character(1024) :: line
 
 integer(ik) :: i
 real(rk), allocatable :: xcenter(:), dx(:)
@@ -79,6 +80,12 @@ select case (solver)
   case default
     call exception_fatal('unknown solver selection: ' // trim(adjustl(solver)))
 endselect
+
+if (TCL > 0.0_rk) then
+  write(line, '(a,es13.6,a)') 'Tcenterline = ', TCL, ' [K]'
+  call output_write(line)
+  call output_write('')
+endif
 
 if (analysis_name /= 'none') then
   call analysis_analyze(analysis_name, fname_analysis, nx, xcenter, temperature, TCL)
