@@ -11,6 +11,7 @@ use geometry, only : geometry_calculate_coordinates, geometry_refine, geometry_s
 use output, only : output_open_file, output_close_file, output_write, &
   output_temperature_csv
 use finite_difference, only : finite_difference_solve
+use finite_element, only : finite_element_solve
 use source_function, only : source_function_init, source_function_cleanup, &
   source_output_csv
 use conductivity_function, only : conductivity_function_init, conductivity_function_cleanup, &
@@ -75,6 +76,10 @@ allocate(temperature(nx))
 select case (solver)
   case ('finite_difference')
     call finite_difference_solve(geometry, nx, xcenter, dx, &
+      bctype_left, bctype_right, bcval_left, bcval_right, &
+      max_iter, tol_temperature, init_temperature, temperature, TCL)
+  case ('finite_element')
+    call finite_element_solve(geometry, nx, xcenter, dx, &
       bctype_left, bctype_right, bcval_left, bcval_right, &
       max_iter, tol_temperature, init_temperature, temperature, TCL)
   case default

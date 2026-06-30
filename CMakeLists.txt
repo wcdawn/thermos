@@ -11,12 +11,14 @@ target_sources(${PROJECT_NAME}.x
     src/exception_handler.f90
     src/fileio.f90
     src/finite_difference.f90
+    src/finite_element.f90
     src/geometry.f90
     src/input.f90
     src/kind.f90
     src/linalg.f90
     src/main.f90
     src/output.f90
+    src/quadrature.f90
     src/source_function.f90
 )
 
